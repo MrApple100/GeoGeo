@@ -70,7 +70,7 @@ public class Search extends Service{
         Toast.makeText(getApplication(),"SearchStarted",Toast.LENGTH_LONG);
         AnotherThread anotherThread;
         String wordofcity=intent.getStringExtra("city");
-        int kolchanges=intent.getIntExtra("numchange",0);
+        int kolchanges=intent.getIntExtra("numchange",-1);
         System.out.println("++++"+wordofcity);
         anotherThread = new AnotherThread(wordofcity,kolchanges);
         anotherThread.start();
@@ -101,16 +101,20 @@ public class Search extends Service{
                 synchronized (wordofcity) {
                     try {
                         System.out.println(wordofcity);
-                        URL url = new URL("https://api.openweathermap.org/geo/1.0/direct?q=" + wordofcity + "&limit=5&appid=11380ed4b5872057ec582d1289415365");
+                        URL url = new URL("https://api.openweathermap.org/geo/1.0/direct?q=" + wordofcity + "&limit=5&appid=11380ed4b5872057ec582d1289415365");;
                         Scanner inputstream = new Scanner((InputStream) url.getContent());
                         result = "{\"list\":" + inputstream.nextLine() + "}";
                         System.out.println("-------" + result);
                     } catch (IOException eio) {
+                        System.out.println("eeerrrreee");
                         eio.getStackTrace();
                         noresult = true;
                     }
                     if (noresult) {
-
+                        Intent intent = new Intent(CHANNEL);
+                        intent.putExtra(INFO, -1);
+                        intent.putExtra("numchange",-1);
+                        sendBroadcast(intent);
                     } else {
                         Intent intent = new Intent(CHANNEL);
                         intent.putExtra(INFO, result);

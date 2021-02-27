@@ -37,10 +37,12 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         holder.NameCountryView.setText(city.getNameCountry());
     }
 
+
     @Override
     public int getItemCount() {
-        return 0;
+        return cities.size();
     }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         final TextView NameCityView, NameCountryView;
 

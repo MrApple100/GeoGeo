@@ -1,20 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    >
     <EditText
+        android:id="@+id/searchword"
         android:layout_width="300dp"
         android:layout_height="35dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@drawable/roundcorners">
+        android:gravity="center"
+        android:background="@drawable/roundcorners"
+        android:layout_centerHorizontal="true"
+        >
     </EditText>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/citylist"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal">
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:layout_gravity="center_horizontal"
+        android:layout_below="@+id/searchword">
     </androidx.recyclerview.widget.RecyclerView>
+    <TextView
+        android:id="@+id/notfound"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        >
 
-</LinearLayout>
+    </TextView>
+
+</RelativeLayout>

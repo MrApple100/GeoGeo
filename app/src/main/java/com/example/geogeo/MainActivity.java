@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
         textsky = (TextView) findViewById(R.id.sky);
         textsity = (TextView) findViewById(R.id.sity);
         Button button=(Button) findViewById(R.id.but);
+        Button search=(Button) findViewById(R.id.search_go_btn);
         editsity=(EditText) findViewById(R.id.editsity);
         Maintext=(TextView) findViewById(R.id.text1);
         kolchanges=0;
@@ -83,7 +84,13 @@ public class MainActivity extends AppCompatActivity {
         };
         editsity.addTextChangedListener(textWatcher);
 
-
+        search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(MainActivity.this,ViewSearch.class);
+                startActivityForResult(intent,1);
+            }
+        });
 
         button.setOnClickListener( new View.OnClickListener(){
             @Override

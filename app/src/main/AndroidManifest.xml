@@ -19,6 +19,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ViewSearch"
+            android:screenOrientation="portrait">
+        </activity>
         <service android:name=".Search"
             android:enabled="true"
             android:exported="true"/>
