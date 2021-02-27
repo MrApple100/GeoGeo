@@ -5,43 +5,32 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/sidesnow"
+    android:background="@drawable/sidewarm"
     tools:context=".MainActivity">
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        >
+        android:layout_height="50dp">
         <Button
             android:id="@+id/search_go_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="поиск"
-            android:layout_gravity="center">
+            android:layout_centerVertical="true"
+            android:layout_alignParentLeft="true">
         </Button>
-        <EditText
-            android:id="@+id/editsity"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:hint="search"
-            android:layout_gravity="center"
-            android:textSize="20dp">
-        </EditText>
+
         <TextView
             android:id="@+id/sity"
-            android:layout_width="100dp"
+            android:layout_width="200dp"
             android:layout_height="50dp"
-            android:layout_gravity="center"
-            android:background="@drawable/roundcorners"
-            android:textSize="20dp">
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:textSize="20dp"
+            android:singleLine="true">
         </TextView>
-        <Button
-            android:id="@+id/but"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="search"
-            android:layout_gravity="right">
-        </Button>
-    </LinearLayout>
+
+    </RelativeLayout>
     <LinearLayout
         android:layout_marginTop="50dp"
         android:layout_width="match_parent"

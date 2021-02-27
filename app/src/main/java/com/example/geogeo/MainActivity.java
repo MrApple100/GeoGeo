@@ -1,6 +1,7 @@
 package com.example.geogeo;
 
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -42,9 +43,6 @@ public class MainActivity extends AppCompatActivity {
     TextView textsky;
     TextView textsity;
     TextView Maintext;
-    int kolchanges;
-    public static EditText editsity;
-    JSONArray jsonlistcities;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,36 +51,9 @@ public class MainActivity extends AppCompatActivity {
         textdegree = (TextView) findViewById(R.id.currentdegree);
         textsky = (TextView) findViewById(R.id.sky);
         textsity = (TextView) findViewById(R.id.sity);
-        Button button=(Button) findViewById(R.id.but);
         Button search=(Button) findViewById(R.id.search_go_btn);
-        editsity=(EditText) findViewById(R.id.editsity);
         Maintext=(TextView) findViewById(R.id.text1);
-        kolchanges=0;
-        TextWatcher textWatcher=new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                kolchanges++;
-                String stringofword=String.valueOf(s);
-                System.out.println(stringofword);
-                registerReceiver(receiverlistofcities, new IntentFilter(Search.CHANNEL));
-                Intent intent = new Intent(getApplication(), Search.class);
-                intent.putExtra("city", stringofword);
-                intent.putExtra("numchange",kolchanges);
-                stopService(intent);
-                startService(intent);
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        };
-        editsity.addTextChangedListener(textWatcher);
 
         search.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,33 +62,17 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(intent,1);
             }
         });
-
-        button.setOnClickListener( new View.OnClickListener(){
-            @Override
-            public void onClick(View v) {
-                if((editsity.getText().toString()).compareTo("")!=0) {
-                    String city = editsity.getText() + "";
-                    registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
-                    Intent intent = new Intent(getApplication(), Geoservice.class);
-                    intent.putExtra("city", city);
-                    startService(intent);
-                    kolchanges=0;
-                }
-            }
-        });
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if((editsity.getText().toString()).compareTo("")!=0){
-            String city =editsity.getText()+"";
+        if((textsity.getText().toString()).compareTo("")!=0){
+            String city =textsity.getText()+"";
             registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
             Intent intent = new Intent(getApplication(), Geoservice.class);
             intent.putExtra("city",city);
             startService(intent);
-            kolchanges=0;
         }
     }
 
@@ -129,28 +84,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intentsearch = new Intent(this, Search.class);
         stopService(intentsearch);
     }
-    protected BroadcastReceiver receiverlistofcities = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (kolchanges == intent.getIntExtra("numchange", 0)) {
-                try {
-                    JSONArray jsonlistcities = (JSONArray) new JSONObject((intent.getStringExtra(Search.INFO))).get("list");
-                    for (int i = 0; i < jsonlistcities.length(); i++) {
-                        JSONObject jsonruscity = (JSONObject) jsonlistcities.get(i);
-                        if (((JSONObject) jsonruscity.get("local_names")).has("ru")) {
-                            System.out.println(((JSONObject) jsonruscity.get("local_names")).getString("ru") + " / " + jsonruscity.getString("country"));
-                        }else{
-                            System.out.println((jsonruscity.getString("name")) + " / " + jsonruscity.getString("country"));
 
-                        }
-                    }
-                } catch (JSONException json) {
-
-                }
-                kolchanges=0;
-            }
-        }
-    };
     protected BroadcastReceiver receivercurrent = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -175,4 +109,17 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        String NameCity=data.getStringExtra(ViewSearch.RESULTSEARCH);
+        if(NameCity.compareTo("")!=0){
+            String city =NameCity;
+            registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
+            Intent intent = new Intent(getApplication(), Geoservice.class);
+            intent.putExtra("city",city);
+            startService(intent);
+        }
+    }
 }

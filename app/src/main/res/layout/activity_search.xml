@@ -6,22 +6,32 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     >
+    <RelativeLayout
+        android:id="@+id/upper"
+        android:layout_width="330dp"
+        android:layout_height="45dp"
+        android:layout_marginLeft="10dp"
+        android:background="@drawable/roundcorners"
+        android:layout_centerHorizontal="true">
     <EditText
         android:id="@+id/searchword"
         android:layout_width="300dp"
         android:layout_height="35dp"
-        android:gravity="center"
-        android:background="@drawable/roundcorners"
+        android:gravity="left"
+        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
-        >
+        android:background="@drawable/nullbackground"
+        android:singleLine="true">
     </EditText>
+    </RelativeLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/citylist"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         android:layout_gravity="center_horizontal"
-        android:layout_below="@+id/searchword">
+        android:layout_below="@+id/upper">
     </androidx.recyclerview.widget.RecyclerView>
     <TextView
         android:id="@+id/notfound"
@@ -29,6 +39,7 @@
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
+        android:singleLine="true"
         >
 
     </TextView>
