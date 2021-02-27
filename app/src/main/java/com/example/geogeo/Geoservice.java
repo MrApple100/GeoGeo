@@ -12,7 +12,7 @@ import java.util.Scanner;
 
 
 public class Geoservice extends Service{
-    public static final String CHANNEL= "CHANNEL";
+    public static final String CHANNEL= "GEO";
     public static final String INFOCurrent = "INFOCurrent";
     @Override
     public void onCreate() {
@@ -25,7 +25,7 @@ public class Geoservice extends Service{
         AnotherThread anotherThread;
         try {
 
-            anotherThread = new AnotherThread(new URL("https://api.openweathermap.org/data/2.5/weather?q="+intent.getStringExtra("sity")+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"));
+            anotherThread = new AnotherThread(new URL("https://api.openweathermap.org/data/2.5/weather?q="+intent.getStringExtra("city")+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"));
             anotherThread.start();
         }catch(IOException e){
             e.getStackTrace();
@@ -53,7 +53,7 @@ public class Geoservice extends Service{
                 String result;
                 try{
                     Scanner inputstream = new Scanner((InputStream) url.getContent());
-                    result = "{\"gis\":" + inputstream.nextLine() + "}";
+                    result="{\"gis\":" +inputstream.nextLine()+"}";
                     System.out.println(result);
                 }catch(IOException eio){
                     result= eio.toString();

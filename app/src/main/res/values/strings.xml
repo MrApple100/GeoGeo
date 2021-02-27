@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">GeoGeo</string>
+    <string name="MyAppID">IMVE6I870S</string>
+    <string name="MyApiKey">0fcf4942abacc188e8c34a958eef7cdf</string>
 </resources>
