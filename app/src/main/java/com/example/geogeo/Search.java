@@ -56,6 +56,7 @@ import java.util.zip.ZipInputStream;
 public class Search extends Service{
     public static String CHANNEL="SEARCH";
     public static String INFO="listofcity";
+    public static String ERROR="error";
     JSONObject jsonObjectsity;
     JSONArray jsonlistsity;
     android.os.Handler handler;
@@ -99,27 +100,30 @@ public class Search extends Service{
                 String result=null;
                 Boolean noresult=false;
                 synchronized (wordofcity) {
-                    try {
-                        System.out.println(wordofcity);
-                        URL url = new URL("https://api.openweathermap.org/geo/1.0/direct?q=" + wordofcity + "&limit=5&appid=11380ed4b5872057ec582d1289415365");;
-                        Scanner inputstream = new Scanner((InputStream) url.getContent());
-                        result = "{\"list\":" + inputstream.nextLine() + "}";
-                        System.out.println("-------" + result);
-                    } catch (IOException eio) {
-                        System.out.println("eeerrrreee");
-                        eio.getStackTrace();
-                        noresult = true;
-                    }
-                    if (noresult) {
-                        Intent intent = new Intent(CHANNEL);
-                        intent.putExtra(INFO, -1);
-                        intent.putExtra("numchange",-1);
-                        sendBroadcast(intent);
-                    } else {
-                        Intent intent = new Intent(CHANNEL);
-                        intent.putExtra(INFO, result);
-                        intent.putExtra("numchange",numchange);
-                        sendBroadcast(intent);
+                    if (ViewSearch.kolchanges == numchange) {
+                        try {
+                            System.out.println(wordofcity);
+                            URL url = new URL("https://api.openweathermap.org/geo/1.0/direct?q=" + wordofcity + "&limit=5&appid=11380ed4b5872057ec582d1289415365");
+                            ;
+                            Scanner inputstream = new Scanner((InputStream) url.getContent());
+                            result = "{\"list\":" + inputstream.nextLine() + "}";
+                            System.out.println("-------" + result);
+                        } catch (IOException eio) {
+                            System.out.println("eeerrrreee");
+                            eio.getStackTrace();
+                            noresult = true;
+                        }
+                        if (noresult) {
+                            Intent intent = new Intent(CHANNEL);
+                            intent.putExtra(INFO, Search.ERROR);
+                            intent.putExtra("numchange", numchange);
+                            sendBroadcast(intent);
+                        } else {
+                            Intent intent = new Intent(CHANNEL);
+                            intent.putExtra(INFO, result);
+                            intent.putExtra("numchange", numchange);
+                            sendBroadcast(intent);
+                        }
                     }
                 }
 

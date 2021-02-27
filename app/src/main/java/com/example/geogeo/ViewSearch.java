@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,10 +24,11 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class ViewSearch extends AppCompatActivity {
-    int kolchanges;
+    public static String RESULTSEARCH="resultsearch";
+    public static int kolchanges;
     EditText editsity;
     TextView textnotfound;
-    ArrayList<City> cityArrayList;
+    ArrayList<City> cityArrayList=new ArrayList<City>();;
     RecyclerView searchcitylist;
     @Override
     protected void onCreate( Bundle savedInstanceState) {
@@ -52,6 +54,7 @@ public class ViewSearch extends AppCompatActivity {
                 Intent intent = new Intent(getApplication(), Search.class);
                 intent.putExtra("city", stringofword);
                 intent.putExtra("numchange",kolchanges);
+                cityArrayList.clear();
                 textnotfound.setText("Поиск...");
                 stopService(intent);
                 startService(intent);
@@ -88,39 +91,57 @@ public class ViewSearch extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            cityArrayList=new ArrayList<City>();
-            cityArrayList.clear();
-            String city="",country="";
-            System.out.println(kolchanges+""+intent.getIntExtra("numchange", -1));
-            if (kolchanges == intent.getIntExtra("numchange", -1)) {
+            int temptreadnum=intent.getIntExtra("numchange", -1);
+            String temptreadinfo=intent.getStringExtra(Search.INFO);
+            System.out.println("y"+kolchanges+"/"+temptreadnum);
+            System.out.println(temptreadinfo);
+            //найдены города по запросу
+            if (kolchanges == temptreadnum &&(temptreadinfo.compareTo(Search.ERROR)!=0) && (temptreadinfo.compareTo("{\"list\":[]}")!=0)) {
+                SearchAdapter searchAdapter=null;
+                String city="",country="";
+                cityArrayList.clear();
                 try {
-                    JSONArray jsonlistcities = (JSONArray) new JSONObject((intent.getStringExtra(Search.INFO))).get("list");
-                    System.out.println(jsonlistcities);
+                    JSONArray jsonlistcities = (JSONArray) new JSONObject(temptreadinfo).get("list");
+                    System.out.println("????????/"+jsonlistcities.length());
                     for (int i = 0; i < jsonlistcities.length(); i++) {
                         JSONObject jsonruscity = (JSONObject) jsonlistcities.get(i);
-                        if (((JSONObject) jsonruscity.get("local_names")).has("ru")) {
-                            city=((JSONObject) jsonruscity.get("local_names")).getString("ru");
+                        if(jsonruscity.has("local_names")){
+                            if (((JSONObject) jsonruscity.get("local_names")).has("ru")) {
+                                System.out.println("llllk");
+                                city=((JSONObject) jsonruscity.get("local_names")).getString("ru");
+
+                            }else{
+                                System.out.println("kkkkkk");
+                                city=(jsonruscity.getString("name"));
+
+                            }
                         }else{
+                            System.out.println("kkkkkk");
                             city=(jsonruscity.getString("name"));
                         }
                         country=jsonruscity.getString("country");
                         cityArrayList.add(new City(city,country));
+                        System.out.println(i+"-00-"+cityArrayList.get(i).getNameCity());
                     }
+                    System.out.println(cityArrayList.size());
 
                 } catch (JSONException json) {
 
                 }
-            }
-                kolchanges=0;
-                SearchAdapter searchAdapter=null;
-                if(cityArrayList.size()!=0) {
-                    textnotfound.setText("");
-                    searchAdapter = new SearchAdapter(ViewSearch.this, cityArrayList);
-                }else
-                {
-                    textnotfound.setText("Ничего не найдено");
-                }
+
+                textnotfound.setText("");
+                searchAdapter = new SearchAdapter(ViewSearch.this, cityArrayList);
                 searchcitylist.setAdapter(searchAdapter);
+                for(int i=0;i<cityArrayList.size();i++)
+                    System.out.println(cityArrayList.get(i).getNameCity());
+                kolchanges=0;
+            }
+            //не найдены города по запросу
+            if (kolchanges == temptreadnum && ((temptreadinfo.compareTo(Search.ERROR)==0) || (temptreadinfo.compareTo("{\"list\":[]}")==0))) {
+                    textnotfound.setText("Ничего не найдено");
+                    kolchanges=0;
+            }
+
 
         }
     };
@@ -149,4 +170,15 @@ public class ViewSearch extends AppCompatActivity {
             }
         }
     };
+    public void ChooseCity(View view){
+        kolchanges=0;
+        TextView NameCity=(TextView) view.findViewById(R.id.NameCity);
+        System.out.println(NameCity.getText());
+        TextView NameCountry=(TextView) view.findViewById(R.id.NameCountry);
+        String result=NameCity.getText()+","+NameCountry.getText();
+        Intent intent=new Intent();
+        intent.putExtra(RESULTSEARCH,result);
+        setResult(RESULT_OK,intent);
+        finish();
+    }
 }
