@@ -10,23 +10,27 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:gravity="center">
+        >
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="поиск"
+            android:layout_gravity="center">
+        </Button>
         <EditText
             android:id="@+id/editsity"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
             android:hint="search"
-            android:gravity="left"
+            android:layout_gravity="center"
             android:textSize="20dp">
-
         </EditText>
         <TextView
             android:id="@+id/sity"
-            android:layout_width="wrap_content"
+            android:layout_width="100dp"
             android:layout_height="50dp"
-            android:gravity="center"
-            android:text=""
+            android:layout_gravity="center"
+            android:background="@drawable/roundcorners"
             android:textSize="20dp">
         </TextView>
         <Button
@@ -34,8 +38,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="search"
-            android:gravity="right">
-
+            android:layout_gravity="right">
         </Button>
     </LinearLayout>
     <LinearLayout

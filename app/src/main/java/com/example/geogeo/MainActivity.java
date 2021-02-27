@@ -2,6 +2,7 @@ package com.example.geogeo;
 
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.content.BroadcastReceiver;
@@ -56,8 +57,6 @@ public class MainActivity extends AppCompatActivity {
         editsity=(EditText) findViewById(R.id.editsity);
         Maintext=(TextView) findViewById(R.id.text1);
         kolchanges=0;
-        //Search search;
-        //search = new Search();
         TextWatcher textWatcher=new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
