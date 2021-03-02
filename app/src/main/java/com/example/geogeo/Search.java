@@ -59,28 +59,50 @@ public class Search extends Service{
     public static String ERROR="error";
     JSONObject jsonObjectsity;
     JSONArray jsonlistsity;
-    android.os.Handler handler;
-
-
+    Handler handler;
+    AnotherThread anotherThread;
+    String result=null;
+    Boolean noresult=false;
     public void onCreate() {
+        super.onCreate();
         Toast.makeText(getApplication(),"SearchCreated",Toast.LENGTH_LONG);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Toast.makeText(getApplication(),"SearchStarted",Toast.LENGTH_LONG);
-        AnotherThread anotherThread;
         String wordofcity=intent.getStringExtra("city");
-        int kolchanges=intent.getIntExtra("numchange",-1);
+        int numchange=intent.getIntExtra("numchange",-1);
+        anotherThread = new AnotherThread(wordofcity,numchange);
         System.out.println("++++"+wordofcity);
-        anotherThread = new AnotherThread(wordofcity,kolchanges);
-        anotherThread.start();
+        if(ViewSearch.kolchanges==numchange){
+            anotherThread.start();
+        }
+        handler = new Handler() {   // создание хэндлера
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                if (noresult) {
+                    Intent intent = new Intent(CHANNEL);
+                    intent.putExtra(INFO, Search.ERROR);
+                    intent.putExtra("numchange", numchange);
+                    sendBroadcast(intent);
+                } else {
+                    Intent intent = new Intent(CHANNEL);
+                    intent.putExtra(INFO, result);
+                    intent.putExtra("numchange", numchange);
+                    intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+                    sendBroadcast(intent);
+                }
+            }
+        };
 
         return START_NOT_STICKY;
     }
 
     @Override
     public void onDestroy() {
+        super.onDestroy();
         Toast.makeText(getApplication(),"SearchStopped",Toast.LENGTH_LONG);
     }
 
@@ -97,10 +119,9 @@ public class Search extends Service{
         }
         @Override
         public void run() {
-                String result=null;
-                Boolean noresult=false;
                 synchronized (wordofcity) {
-                    if (ViewSearch.kolchanges == numchange) {
+                        System.out.println(ViewSearch.kolchanges+"/"+numchange);
+
                         try {
                             System.out.println(wordofcity);
                             URL url = new URL("https://api.openweathermap.org/geo/1.0/direct?q=" + wordofcity + "&limit=5&appid=11380ed4b5872057ec582d1289415365");
@@ -113,19 +134,8 @@ public class Search extends Service{
                             eio.getStackTrace();
                             noresult = true;
                         }
-                        if (noresult) {
-                            Intent intent = new Intent(CHANNEL);
-                            intent.putExtra(INFO, Search.ERROR);
-                            intent.putExtra("numchange", numchange);
-                            sendBroadcast(intent);
-                        } else {
-                            Intent intent = new Intent(CHANNEL);
-                            intent.putExtra(INFO, result);
-                            intent.putExtra("numchange", numchange);
-                            sendBroadcast(intent);
-                        }
+                        handler.sendEmptyMessage(1);
                     }
-                }
 
         }
     }

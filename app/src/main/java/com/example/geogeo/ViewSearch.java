@@ -1,5 +1,6 @@
 package com.example.geogeo;
 
+import android.app.ActivityManager;
 import android.app.Application;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -22,6 +23,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ViewSearch extends AppCompatActivity {
     public static String RESULTSEARCH="resultsearch";
@@ -30,13 +32,16 @@ public class ViewSearch extends AppCompatActivity {
     TextView textnotfound;
     ArrayList<City> cityArrayList=new ArrayList<City>();;
     RecyclerView searchcitylist;
+    Intent intentsearch;
     @Override
     protected void onCreate( Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        System.out.println("CREEEEEAAT");
         setContentView(R.layout.activity_search);
         editsity=(EditText) findViewById(R.id.searchword);
         textnotfound=(TextView) findViewById(R.id.notfound);
         searchcitylist=(RecyclerView) findViewById(R.id.citylist);
+        intentsearch = new Intent(ViewSearch.this, Search.class);
 
         kolchanges=0;
         TextWatcher textWatcher=new TextWatcher() {
@@ -49,15 +54,14 @@ public class ViewSearch extends AppCompatActivity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 kolchanges++;
                 String stringofword=String.valueOf(s);
-                System.out.println(stringofword);
+                System.out.println("++++++++++"+stringofword);
                 registerReceiver(receiverlistofcities, new IntentFilter(Search.CHANNEL));
-                Intent intent = new Intent(getApplication(), Search.class);
-                intent.putExtra("city", stringofword);
-                intent.putExtra("numchange",kolchanges);
+                intentsearch.putExtra("city", stringofword);
+                intentsearch.putExtra("numchange",kolchanges);
                 cityArrayList.clear();
                 textnotfound.setText("Поиск...");
-                stopService(intent);
-                startService(intent);
+                stopService(intentsearch);
+                startService(intentsearch);
             }
 
             @Override
@@ -67,18 +71,13 @@ public class ViewSearch extends AppCompatActivity {
         };
         editsity.addTextChangedListener(textWatcher);
     }
+
     @Override
-    protected void onResume() {
-        super.onResume();
-        /*if((editsity.getText().toString()).compareTo("")!=0){
-            String city =editsity.getText()+"";
-            registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
-            Intent intent = new Intent(getApplication(), Geoservice.class);
-            intent.putExtra("city",city);
-            startService(intent);
-            kolchanges=0;
-        }*/
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        System.out.println("NEEEEEW");
     }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -86,17 +85,19 @@ public class ViewSearch extends AppCompatActivity {
         stopService(intentweather);
         Intent intentsearch = new Intent(this, Search.class);
         stopService(intentsearch);
+        System.out.println("DESTRROOOY");
+        unregisterReceiver(receiverlistofcities);
     }
     protected BroadcastReceiver receiverlistofcities = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-
             int temptreadnum=intent.getIntExtra("numchange", -1);
             String temptreadinfo=intent.getStringExtra(Search.INFO);
             System.out.println("y"+kolchanges+"/"+temptreadnum);
-            System.out.println(temptreadinfo);
             //найдены города по запросу
             if (kolchanges == temptreadnum &&(temptreadinfo.compareTo(Search.ERROR)!=0) && (temptreadinfo.compareTo("{\"list\":[]}")!=0)) {
+                kolchanges=0;
+                System.out.println("bnbnb");
                 SearchAdapter searchAdapter=null;
                 String city="",country="";
                 cityArrayList.clear();
@@ -134,12 +135,12 @@ public class ViewSearch extends AppCompatActivity {
                 searchcitylist.setAdapter(searchAdapter);
                 for(int i=0;i<cityArrayList.size();i++)
                     System.out.println(cityArrayList.get(i).getNameCity());
-                kolchanges=0;
+
             }
             //не найдены города по запросу
             if (kolchanges == temptreadnum && ((temptreadinfo.compareTo(Search.ERROR)==0) || (temptreadinfo.compareTo("{\"list\":[]}")==0))) {
                     textnotfound.setText("Ничего не найдено");
-                    kolchanges=0;
+                kolchanges=0;
             }
 
 
@@ -172,6 +173,7 @@ public class ViewSearch extends AppCompatActivity {
     };
     public void ChooseCity(View view){
         kolchanges=0;
+        stopService(new Intent(ViewSearch.this,Search.class));
         TextView NameCity=(TextView) view.findViewById(R.id.NameCity);
         System.out.println(NameCity.getText());
         TextView NameCountry=(TextView) view.findViewById(R.id.NameCountry);
@@ -179,6 +181,6 @@ public class ViewSearch extends AppCompatActivity {
         Intent intent=new Intent();
         intent.putExtra(RESULTSEARCH,result);
         setResult(RESULT_OK,intent);
-        finish();
+        ViewSearch.this.finish();
     }
 }
