@@ -58,8 +58,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Intent intent=new Intent(MainActivity.this,ViewSearch.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         textdegree = (TextView) findViewById(R.id.currentdegree);
         fon =(RelativeLayout) findViewById(R.id.fon) ;
         textsky = (TextView) findViewById(R.id.sky);
@@ -71,18 +69,23 @@ public class MainActivity extends AppCompatActivity {
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Intent intent=new Intent(MainActivity.this,ViewSearch.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 System.out.println("kkkkkkkkkkkkkkkkkkkkkkkkkkk"+intent);
                 startActivityForResult(intent,1);
+                overridePendingTransition(R.anim.newfromright,R.anim.oldtoright);
             }
         });
     }
 
+
+
     @Override
     protected void onResume() {
         super.onResume();
+        registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
         if((textsity.getText().toString()).compareTo("")!=0){
             String city =textsity.getText()+"";
-            registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
             Intent intent = new Intent(getApplication(), Geoservice.class);
             intent.putExtra("city",city);
             startService(intent);
@@ -125,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
                 e.getStackTrace();
                 Toast.makeText(MainActivity.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
             }
+            unregisterReceiver(receivercurrent);
         }
     };
 
@@ -136,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
                     String NameCity=data.getStringExtra(ViewSearch.RESULTSEARCH);
                     if(NameCity.compareTo("")!=0){
                         String city =NameCity;
+
                         registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
                         Intent intent = new Intent(getApplication(), Geoservice.class);
                         intent.putExtra("city",city);

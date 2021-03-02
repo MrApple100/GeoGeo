@@ -9,15 +9,17 @@
     android:background="@drawable/sidewarm"
     tools:context=".MainActivity">
     <RelativeLayout
+        android:id="@+id/upper"
         android:layout_width="match_parent"
-        android:layout_height="50dp">
+        android:layout_height="70dp">
         <Button
             android:id="@+id/search_go_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="поиск"
+            android:layout_marginLeft="25dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/baseline_add_20"
             android:layout_centerVertical="true"
-            android:layout_alignParentLeft="true">
+            >
         </Button>
 
         <TextView
@@ -33,11 +35,12 @@
 
     </RelativeLayout>
     <LinearLayout
-        android:layout_marginTop="50dp"
+
         android:layout_width="match_parent"
         android:layout_height="250dp"
         android:orientation="vertical"
-        android:gravity="center">
+        android:gravity="center"
+        android:layout_below="@+id/upper">
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

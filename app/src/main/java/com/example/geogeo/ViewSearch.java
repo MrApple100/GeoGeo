@@ -86,7 +86,6 @@ public class ViewSearch extends AppCompatActivity {
         Intent intentsearch = new Intent(this, Search.class);
         stopService(intentsearch);
         System.out.println("DESTRROOOY");
-        unregisterReceiver(receiverlistofcities);
     }
     protected BroadcastReceiver receiverlistofcities = new BroadcastReceiver() {
         @Override
@@ -96,7 +95,6 @@ public class ViewSearch extends AppCompatActivity {
             System.out.println("y"+kolchanges+"/"+temptreadnum);
             //найдены города по запросу
             if (kolchanges == temptreadnum &&(temptreadinfo.compareTo(Search.ERROR)!=0) && (temptreadinfo.compareTo("{\"list\":[]}")!=0)) {
-                kolchanges=0;
                 System.out.println("bnbnb");
                 SearchAdapter searchAdapter=null;
                 String city="",country="";
@@ -135,14 +133,15 @@ public class ViewSearch extends AppCompatActivity {
                 searchcitylist.setAdapter(searchAdapter);
                 for(int i=0;i<cityArrayList.size();i++)
                     System.out.println(cityArrayList.get(i).getNameCity());
-
+                kolchanges=0;
+                unregisterReceiver(receiverlistofcities);
             }
             //не найдены города по запросу
             if (kolchanges == temptreadnum && ((temptreadinfo.compareTo(Search.ERROR)==0) || (temptreadinfo.compareTo("{\"list\":[]}")==0))) {
                     textnotfound.setText("Ничего не найдено");
                 kolchanges=0;
+                unregisterReceiver(receiverlistofcities);
             }
-
 
         }
     };
@@ -182,5 +181,6 @@ public class ViewSearch extends AppCompatActivity {
         intent.putExtra(RESULTSEARCH,result);
         setResult(RESULT_OK,intent);
         ViewSearch.this.finish();
+        overridePendingTransition(R.anim.alphaup,R.anim.alphadown);
     }
 }
