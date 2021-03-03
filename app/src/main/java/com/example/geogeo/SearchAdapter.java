@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
@@ -35,6 +36,9 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         City city = cities.get(position);
         holder.NameCityView.setText(city.getNameCity());
         holder.NameCountryView.setText(city.getNameCountry());
+        holder.Longitude.setText("Долгота :"+city.getLongitude());
+        holder.Latitude.setText("Широта :"+city.getLatitude());
+        holder.Add.setTag("{\"coord\":"+"{\"name\":\""+city.getNameCity()+"\",\"country\":\""+city.getNameCountry()+"\",\"lon\":\""+city.getLongitude()+"\",\"lat\":\""+city.getLatitude()+"\"}}");
     }
 
 
@@ -44,12 +48,15 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        final TextView NameCityView, NameCountryView;
-
+        final TextView NameCityView, NameCountryView, Longitude, Latitude;
+        final TextView Add;
         ViewHolder(View view){
             super(view);
             NameCityView = (TextView) view.findViewById(R.id.NameCity);
             NameCountryView = (TextView) view.findViewById(R.id.NameCountry);
+            Longitude = (TextView) view.findViewById(R.id.longitude);
+            Latitude = (TextView) view.findViewById(R.id.latitude);
+            Add=(TextView) view.findViewById(R.id.added);
         }
     }
 }

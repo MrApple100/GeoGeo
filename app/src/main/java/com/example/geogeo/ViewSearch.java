@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.json.JSONArray;
@@ -32,6 +33,7 @@ public class ViewSearch extends AppCompatActivity {
     EditText editsity;
     TextView textnotfound;
     ArrayList<City> cityArrayList=new ArrayList<City>();;
+    ArrayList<City> citiesadded=new ArrayList<>();
     RecyclerView searchcitylist;
     Intent intentsearch;
     @Override
@@ -53,16 +55,20 @@ public class ViewSearch extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                kolchanges++;
-                String stringofword=String.valueOf(s);
-                System.out.println("++++++++++"+stringofword);
-                registerReceiver(receiverlistofcities, new IntentFilter(Search.CHANNEL));
-                intentsearch.putExtra("city", stringofword);
-                intentsearch.putExtra("numchange",kolchanges);
-                cityArrayList.clear();
-                textnotfound.setText("Поиск...");
-                stopService(intentsearch);
-                startService(intentsearch);
+                if(!s.equals("")) {
+                    kolchanges++;
+                    String stringofword = String.valueOf(s);
+                    System.out.println("++++++++++" + stringofword);
+                    registerReceiver(receiverlistofcities, new IntentFilter(Search.CHANNEL));
+                    intentsearch.putExtra("city", stringofword);
+                    intentsearch.putExtra("numchange", kolchanges);
+                    cityArrayList.clear();
+                    textnotfound.setText("Поиск...");
+                    stopService(intentsearch);
+                    startService(intentsearch);
+                }else{
+
+                }
             }
 
             @Override
@@ -71,6 +77,7 @@ public class ViewSearch extends AppCompatActivity {
             }
         };
         editsity.addTextChangedListener(textWatcher);
+
     }
 
     @Override
@@ -98,7 +105,7 @@ public class ViewSearch extends AppCompatActivity {
             if (kolchanges == temptreadnum &&(temptreadinfo.compareTo(Search.ERROR)!=0) && (temptreadinfo.compareTo("{\"list\":[]}")!=0)) {
                 System.out.println("bnbnb");
                 SearchAdapter searchAdapter=null;
-                String city="",country="";
+                String city="",country="",longitude="",latitude="";
                 cityArrayList.clear();
                 try {
                     JSONArray jsonlistcities = (JSONArray) new JSONObject(temptreadinfo).get("list");
@@ -120,7 +127,9 @@ public class ViewSearch extends AppCompatActivity {
                             city=(jsonruscity.getString("name"));
                         }
                         country=jsonruscity.getString("country");
-                        cityArrayList.add(new City(city,country));
+                        longitude=jsonruscity.getString("lon");
+                        latitude=jsonruscity.getString("lat");
+                        cityArrayList.add(new City(city,country,longitude,latitude));
                         System.out.println(i+"-00-"+cityArrayList.get(i).getNameCity());
                     }
                     System.out.println(cityArrayList.size());
@@ -183,5 +192,20 @@ public class ViewSearch extends AppCompatActivity {
         setResult(RESULT_OK,intent);
         ViewSearch.this.finish();
 
+    }
+    public void AddedCity(View view){
+        TextView Addbut=(TextView) findViewById(view.getId());
+        //делай галочку
+        Addbut.setBackground(ContextCompat.getDrawable(this,R.drawable.nullbackground));
+
+        try{
+            System.out.println(Addbut.getTag());
+        JSONObject jsoncity=(JSONObject) new JSONObject((String)Addbut.getTag()).get("coord");
+
+        citiesadded.add(new City(jsoncity.getString("name"),jsoncity.getString("country"),jsoncity.getString("lon"),jsoncity.getString("lat")));
+
+        }catch (JSONException e){
+            System.out.println("you are a bad programmer");
+        }
     }
 }
