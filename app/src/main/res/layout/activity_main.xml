@@ -15,8 +15,8 @@
         <Button
             android:id="@+id/search_go_btn"
             android:layout_marginLeft="25dp"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:background="@drawable/baseline_add_20"
             android:layout_centerVertical="true"
             >
@@ -29,7 +29,7 @@
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:gravity="center"
-            android:textSize="20dp"
+            android:textSize="18dp"
             android:singleLine="true">
         </TextView>
 

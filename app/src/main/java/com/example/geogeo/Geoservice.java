@@ -24,8 +24,8 @@ public class Geoservice extends Service{
         Toast.makeText(getApplication(),"ServiceStarted",Toast.LENGTH_LONG);
         AnotherThread anotherThread;
         try {
-
-            anotherThread = new AnotherThread(new URL("https://api.openweathermap.org/data/2.5/weather?q="+intent.getStringExtra("city")+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"));
+            String wordofcity = intent.getStringExtra("city").trim();
+            anotherThread = new AnotherThread(new URL("https://api.openweathermap.org/data/2.5/weather?q="+wordofcity+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"));
             anotherThread.start();
         }catch(IOException e){
             e.getStackTrace();

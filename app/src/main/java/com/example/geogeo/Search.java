@@ -124,8 +124,7 @@ public class Search extends Service{
 
                         try {
                             System.out.println(wordofcity);
-                            URL url = new URL("https://api.openweathermap.org/geo/1.0/direct?q=" + wordofcity + "&limit=5&appid=11380ed4b5872057ec582d1289415365");
-                            ;
+                            URL url = new URL("https://api.openweathermap.org/geo/1.0/direct?q=" + wordofcity + "&limit=16&appid=11380ed4b5872057ec582d1289415365");
                             Scanner inputstream = new Scanner((InputStream) url.getContent());
                             result = "{\"list\":" + inputstream.nextLine() + "}";
                             System.out.println("-------" + result);

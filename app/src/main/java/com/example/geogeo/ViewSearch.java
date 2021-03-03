@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.animation.Animation;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -181,6 +182,6 @@ public class ViewSearch extends AppCompatActivity {
         intent.putExtra(RESULTSEARCH,result);
         setResult(RESULT_OK,intent);
         ViewSearch.this.finish();
-        overridePendingTransition(R.anim.alphaup,R.anim.alphadown);
+
     }
 }
