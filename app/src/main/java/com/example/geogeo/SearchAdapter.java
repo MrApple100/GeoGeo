@@ -38,7 +38,9 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         holder.NameCountryView.setText(city.getNameCountry());
         holder.Longitude.setText("Долгота :"+city.getLongitude());
         holder.Latitude.setText("Широта :"+city.getLatitude());
-        holder.Add.setTag("{\"coord\":"+"{\"name\":\""+city.getNameCity()+"\",\"country\":\""+city.getNameCountry()+"\",\"lon\":\""+city.getLongitude()+"\",\"lat\":\""+city.getLatitude()+"\"}}");
+
+        holder.Add.setTag("{\"coord\":"+"{\"idtag\":\""+(staticTag)+"\",\"name\":\""+city.getNameCity()+"\",\"country\":\""+city.getNameCountry()+"\",\"lon\":\""+city.getLongitude()+"\",\"lat\":\""+city.getLatitude()+"\"}}");
+        staticTag++;
     }
 
 

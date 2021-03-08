@@ -20,8 +20,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ViewSearch"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTask">
+            android:screenOrientation="portrait">
         </activity>
         <service android:name=".Search"
             android:enabled="true"

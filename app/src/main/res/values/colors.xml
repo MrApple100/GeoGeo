@@ -8,5 +8,9 @@
     <color name="black">#000000</color>
     <color name="white">#2600BCD4</color>
     <color name="hint">#066771</color>
-
+    <color name="warm">#EF9D24</color>
+    <color name="neitral">#858585</color>
+    <color name="cold">#00338C</color>
+    <color name="neitral_cold">#5B7478</color>
+    <color name="neitral_warm">#00D8D1</color>
 </resources>

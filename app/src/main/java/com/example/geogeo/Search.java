@@ -18,13 +18,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.algolia.search.saas.AlgoliaException;
-import com.algolia.search.saas.Client;
-import com.algolia.search.saas.CompletionHandler;
-import com.algolia.search.saas.Index;
-import com.algolia.search.saas.Query;
-import com.algolia.search.saas.places.PlacesClient;
-import com.algolia.search.saas.places.PlacesQuery;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -138,53 +131,10 @@ public class Search extends Service{
 
         }
     }
-    /*public JSONArray getjsonlistsity(String wordofcity) {
-
-        PlacesQuery placesQuery=new PlacesQuery();
-        placesQuery.setQuery(wordofcity);
-        placesQuery.setType(PlacesQuery.Type.CITY);
-        placesQuery.setHitsPerPage(10);
-        String string="";
-        System.out.println("--------------------------------------"+query.getApplicationID());
-        //AnotherThread anotherThread=new AnotherThread(placesQuery);
-        //anotherThread.run();
-        try {
-            AnotherThread2 anotherThread2 = new AnotherThread2(new URL("https://api.openweathermap.org/data/2.5/weather?q=" + wordofcity + "&lang=ru&appid=11380ed4b5872057ec582d1289415365"));
-            anotherThread2.run();
-        }catch(IOException e){
-
-        }
 
 
-        return jsonlistsity;
-    }*/
 
 
-   /* public class AnotherThread extends Thread{
-        private PlacesQuery placesQuery;
-        AnotherThread(PlacesQuery placesQuery){this.placesQuery=placesQuery;}
-        @Override
-        public void run() {
-            synchronized (placesQuery){
-                System.out.println(placesQuery);
-                CompletionHandler completionHandler=new CompletionHandler() {
-                    @Override
-                    public void requestCompleted(JSONObject jsonObject, AlgoliaException e) {
-                        System.out.println("EEEEEEEEEEEEEEror: "+e);
-                        try {
-                            System.out.println(jsonObject);
-                            jsonlistsity = (JSONArray) jsonObject.get("cities");
-                        } catch (JSONException jsonException) {
-                            jsonException.printStackTrace();
-                        }
-                    }
-                };
-                query.searchAsync(placesQuery,completionHandler);
-            }
-
-        }
-    }
-    */
     public class AnotherThread2 extends Thread{
         URL url;
         AnotherThread2(URL url){

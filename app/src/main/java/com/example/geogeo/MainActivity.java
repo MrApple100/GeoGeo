@@ -78,16 +78,28 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Intent intentweather = new Intent(this, Geoservice.class);
+        stopService(intentweather);
+        Intent intentsearch = new Intent(this, Search.class);
+        stopService(intentsearch);
+        if(receivercurrent.isOrderedBroadcast()){
+            unregisterReceiver(receivercurrent);
+        }
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
+        //запрос отправляется раньше основного запроса, поэтому его не видно
         if((textsity.getText().toString()).compareTo("")!=0){
+            registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
             String city =textsity.getText()+"";
             Intent intent = new Intent(getApplication(), Geoservice.class);
             intent.putExtra("city",city);
+            intent.putExtra(Geoservice.PERMISSION,"city");
             startService(intent);
         }
     }
@@ -99,31 +111,35 @@ public class MainActivity extends AppCompatActivity {
         stopService(intentweather);
         Intent intentsearch = new Intent(this, Search.class);
         stopService(intentsearch);
+        if(receivercurrent.isOrderedBroadcast()){
+            unregisterReceiver(receivercurrent);
+        }
     }
 
     protected BroadcastReceiver receivercurrent = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                String intentstring=intent.getStringExtra(Geoservice.INFOCurrent);
-                JSONObject jsonweathercurrent = new JSONObject(intentstring);
-                JSONObject jsonbase =(JSONObject) jsonweathercurrent.get("gis");
+                if(intent.getStringExtra(Geoservice.PERMISSION).compareTo("city")==0) {
+                    String intentstring = intent.getStringExtra(Geoservice.INFOCurrent);
+                    JSONObject jsonweathercurrent = new JSONObject(intentstring);
+                    JSONObject jsonbase = (JSONObject) jsonweathercurrent.get("gis");
 
-                String sity= jsonbase.getString("name");
-                System.out.println(sity);
-                String wedescr=((JSONObject)((JSONArray) jsonbase.get("weather")).get(0)).getString("description");
-                System.out.println(wedescr);
-                int curdegK=((JSONObject) jsonbase.get("main")).getInt("temp");
-                int curdeg=curdegK-273;
-                System.out.println(curdeg);
-                textsity.setText(sity);
-                textdegree.setText(String.valueOf(curdeg));
-                textsky.setText(wedescr); //выводим  JSON-массив в текстовое поле
-                //int fon = ContextCompat.getDrawable(getApplication(),R.drawable.sidewarm);
-                //final ValueAnimator fonanimation=ValueAnimator.ofObject(new ArgbEvaluator(),ContextCompat.getDrawable(getApplication(),R.drawable.sidewarm),
-                 //                                                                     ContextCompat.getDrawable(getApplication(),R.drawable.sidehalfsun));
-               // ObjectAnimator.ofObject(fon,"backgroundColor",new ArgbEvaluator(),getResources().getColor(R.color.black),getResources().getColor(R.color.white)).setDuration(1000).start();
-
+                    String sity = jsonbase.getString("name");
+                    System.out.println(sity);
+                    String wedescr = ((JSONObject) ((JSONArray) jsonbase.get("weather")).get(0)).getString("description");
+                    System.out.println(wedescr);
+                    int curdegK = ((JSONObject) jsonbase.get("main")).getInt("temp");
+                    int curdeg = curdegK - 273;
+                    System.out.println(curdeg);
+                    textsity.setText(sity);
+                    textdegree.setText(String.valueOf(curdeg));
+                    textsky.setText(wedescr); //выводим  JSON-массив в текстовое поле
+                    //int fon = ContextCompat.getDrawable(getApplication(),R.drawable.sidewarm);
+                    //final ValueAnimator fonanimation=ValueAnimator.ofObject(new ArgbEvaluator(),ContextCompat.getDrawable(getApplication(),R.drawable.sidewarm),
+                    //                                                                     ContextCompat.getDrawable(getApplication(),R.drawable.sidehalfsun));
+                    // ObjectAnimator.ofObject(fon,"backgroundColor",new ArgbEvaluator(),getResources().getColor(R.color.black),getResources().getColor(R.color.white)).setDuration(1000).start();
+                }
             } catch (JSONException e) {
                 e.getStackTrace();
                 Toast.makeText(MainActivity.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
@@ -144,8 +160,11 @@ public class MainActivity extends AppCompatActivity {
                         registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
                         Intent intent = new Intent(getApplication(), Geoservice.class);
                         intent.putExtra("city",city);
+                        intent.putExtra(Geoservice.PERMISSION,"city");
                         startService(intent);
                     }
+                    break;
+            case RESULT_CANCELED:
                     break;
         }
     }
