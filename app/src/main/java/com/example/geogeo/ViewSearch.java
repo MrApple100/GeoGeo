@@ -12,9 +12,11 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,6 +36,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -46,10 +49,10 @@ public class ViewSearch extends AppCompatActivity {
     public static int kolchanges;
     EditText editsity;
     TextView textnotfound;
-    ArrayList<City> cityArrayList=new ArrayList<City>();;
+    ArrayList<City> cityArrayList=new ArrayList<City>();
+    ArrayList<Integer> arrayTorFadded=new ArrayList<>();
     ArrayList<City> citiesadded=new ArrayList<>();
-    ArrayList<Integer> arrayid=new ArrayList<>();
-    ArrayList<String> arraydegree=new ArrayList<>();
+    HashMap<Integer,String> hashmapdegree=new HashMap<>();
     RecyclerView searchcitylist;
     AddedAdapter addedAdapter;
     Intent intentsearch;
@@ -98,10 +101,12 @@ public class ViewSearch extends AppCompatActivity {
                     intentsearch.putExtra("numchange", kolchanges);
                     cityArrayList.clear();
                     searchcitylist.removeAllViewsInLayout();
+                    searchcitylist.setVisibility(View.GONE);
                     textnotfound.setText("Поиск...");
                     stopService(intentsearch);
                     startService(intentsearch);
                 }else{
+                    searchcitylist.setVisibility(View.VISIBLE);
                     kolchanges=0;
                     textnotfound.setText("");
                     Handler handler=new Handler(){
@@ -129,10 +134,25 @@ public class ViewSearch extends AppCompatActivity {
             }
         };
         editsity.addTextChangedListener(textWatcher);
+        editsity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (AddedAdapter.getTimeforSelect()) {
+                    AddedAdapter.setTimeforselect(false);
+                    LinearLayout linearLayout = (LinearLayout) findViewById(R.id.celldeleteadded);
+                    linearLayout.setVisibility(View.GONE);
+                    RecyclerView recyclerView = (RecyclerView) findViewById(R.id.citylist);
+                    for (int i = 0; i < recyclerView.getAdapter().getItemCount(); i++) {
+                        addedAdapter.setCheckarrayvisByPos(i, false);
+                        addedAdapter.setCheckarraycheckByPos(i, false);
+                        addedAdapter.notifyItemChanged(i);
+                    }
+                }
+            }
+        });
 
+        }
 
-
-    }
 
     @Override
     protected void onResume() {
@@ -140,6 +160,7 @@ public class ViewSearch extends AppCompatActivity {
         kolchanges=0;
         if(String.valueOf(editsity.getText()).compareTo("")==0) {
             textnotfound.setText("");
+            searchcitylist.setVisibility(View.VISIBLE);
             Handler handler = new Handler() {
                 @Override
                 public void handleMessage(@NonNull Message msg) {
@@ -216,6 +237,7 @@ public class ViewSearch extends AppCompatActivity {
                 SearchAdapter searchAdapter=null;
                 String city="",country="",longitude="",latitude="";
                 cityArrayList.clear();
+                arrayTorFadded.clear();
                 try {
                     JSONArray jsonlistcities = (JSONArray) new JSONObject(temptreadinfo).get("list");
                     System.out.println("????????/"+jsonlistcities.length());
@@ -238,6 +260,13 @@ public class ViewSearch extends AppCompatActivity {
                         country=jsonruscity.getString("country");
                         longitude=jsonruscity.getString("lon");
                         latitude=jsonruscity.getString("lat");
+                        int idcity = (jsonruscity.getString("lon") + jsonruscity.getString("lat")).hashCode();
+
+                        for(int j=0;j<addedCityDao.getAll().size();j++){
+                            if(addedCityDao.getAll().get(j).getId()==idcity){
+                                arrayTorFadded.add(idcity);
+                            }
+                        }
                         cityArrayList.add(new City(city,country,longitude,latitude));
                         System.out.println(i+"-00-"+cityArrayList.get(i).getNameCity());
                     }
@@ -258,8 +287,8 @@ public class ViewSearch extends AppCompatActivity {
                     startService(intentgeo);
                 }
 
-
-                searchAdapter = new SearchAdapter(ViewSearch.this, cityArrayList);
+                searchAdapter = new SearchAdapter(ViewSearch.this, cityArrayList,arrayTorFadded);
+                searchcitylist.setVisibility(View.VISIBLE);
                 searchcitylist.setAdapter(searchAdapter);
                 for(int i=0;i<cityArrayList.size();i++)
                     System.out.println(cityArrayList.get(i).getNameCity());
@@ -286,9 +315,11 @@ public class ViewSearch extends AppCompatActivity {
                     JSONObject jsonbase = (JSONObject) jsonweathercurrent.get("gis");
 
                     int curdegK = ((JSONObject) jsonbase.get("current")).getInt("temp");
+                    String strlon=jsonbase.getString("lon");
+                    String strlat=jsonbase.getString("lat");
                     int curdeg = curdegK - 273;
                     String degree = curdeg + "";
-                    arraydegree.add(degree);
+                    hashmapdegree.put((strlon+strlat).hashCode(),degree);
                     unregisterReceiver(receivercurrentSearch);
                 } catch (JSONException e) {
                     e.getStackTrace();
@@ -346,9 +377,11 @@ public class ViewSearch extends AppCompatActivity {
         JSONObject jsoncity=(JSONObject) new JSONObject((String)Addbut.getTag()).get("coord");
         int id=Integer.parseInt(jsoncity.getString("idtag"));
             System.out.println("1");
-        String degreecity=arraydegree.get(id);
-            System.out.println("2");
             int idcity = (jsoncity.getString("lon") + jsoncity.getString("lat")).hashCode();
+        String degreecity=hashmapdegree.get(idcity);
+            System.out.println("2");
+            System.out.println(jsoncity.getString("lon") + jsoncity.getString("lat"));
+
 
             System.out.println("access"+idcity);
         citiesadded.add(new City(jsoncity.getString("name"),jsoncity.getString("country"),jsoncity.getString("lon"),jsoncity.getString("lat")));
@@ -379,12 +412,58 @@ public class ViewSearch extends AppCompatActivity {
             }
         }else{
             AddedAdapter.setTimeforselect(false);
+            LinearLayout linearLayout=(LinearLayout) findViewById(R.id.celldeleteadded);
+            linearLayout.setVisibility(View.GONE);
             RecyclerView recyclerView=(RecyclerView) findViewById(R.id.citylist);
             for(int i=0;i<recyclerView.getAdapter().getItemCount();i++){
                 addedAdapter.setCheckarrayvisByPos(i,false);
                 addedAdapter.setCheckarraycheckByPos(i,false);
                 addedAdapter.notifyItemChanged(i);
             }
+        }
+    }
+    public void DeleteAdded(View view){
+        ArrayList<Integer> icount=new ArrayList<Integer>();
+        for(int i=0;i<addedAdapter.getCheckarrayvis().size();i++){
+            final int tempi = i;
+            if (addedAdapter.getCheckarraycheck().get(tempi)) {
+                icount.add(tempi);
+                AddedAdapter.ViewHolder childholder =(AddedAdapter.ViewHolder) searchcitylist.getChildViewHolder(searchcitylist.getChildAt(tempi));
+                AddedCity addedCity=new AddedCity("","","","");
+                String strlon=(childholder.Longitude.getText()+"").split(":")[1];
+                String strlat=(childholder.Latitude.getText()+"").split(":")[1];
+                System.out.println(strlon+""+strlat);
+                int idcity = (strlon+strlat).hashCode();
+                addedCity.setId(idcity);
+                Handler handler=new Handler(){
+                    @Override
+                    public void handleMessage(@NonNull Message msg) {
+                        super.handleMessage(msg);
+                        searchcitylist.setAdapter(addedAdapter);
+                    }
+                };
+                Executors.newSingleThreadExecutor().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        System.out.println("DELELE");
+                        addedCityDao.delete(addedCity);
+                        addedAdapter= new AddedAdapter(ViewSearch.this, addedCityDao.getAll());
+                        handler.sendEmptyMessage(1);
+                    }
+
+                });
+
+            }
+
+        }
+        AddedAdapter.setTimeforselect(false);
+        LinearLayout linearLayout=(LinearLayout) findViewById(R.id.celldeleteadded);
+        linearLayout.setVisibility(View.GONE);
+        RecyclerView recyclerView=(RecyclerView) findViewById(R.id.citylist);
+        for(int i=0;i<recyclerView.getAdapter().getItemCount();i++){
+            addedAdapter.setCheckarrayvisByPos(i,false);
+            addedAdapter.setCheckarraycheckByPos(i,false);
+            addedAdapter.notifyItemChanged(i);
         }
     }
 }

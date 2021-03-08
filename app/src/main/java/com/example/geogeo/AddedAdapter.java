@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,6 +19,7 @@ import java.util.List;
 
 public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
     private int staticTag=0;
+    private Context context;
     private  final LayoutInflater inflater;
     private final List<AddedCity> cities;
     private  static boolean timeforselect=false;
@@ -26,6 +28,7 @@ public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
 
 
     AddedAdapter(Context context, List<AddedCity> cities) {
+        this.context=context;
         this.cities = cities;
         this.inflater = LayoutInflater.from(context);
 
@@ -54,23 +57,20 @@ public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
     @Override
     public AddedAdapter.ViewHolder onCreateViewHolder( ViewGroup parent, int viewType) {
         View view = inflater.inflate(R.layout.oneaddedcityelement, parent, false) ;
-        view.setTag(staticTag);
+        //view.setTag(staticTag);
         view.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 if(!AddedAdapter.getTimeforSelect()) {
                     AddedAdapter.setTimeforselect(true);
                     RecyclerView recyclerView = (RecyclerView) v.getParent();
-                    ((ViewHolder) recyclerView.getChildViewHolder(v)).checkBox.setChecked(true);
-                    int kolchildonview=6;
-                    if(recyclerView.getAdapter().getItemCount()<6){
-                        kolchildonview=recyclerView.getAdapter().getItemCount();
-                    }
+                    setCheckarraycheckByPos(recyclerView.getChildAdapterPosition(v),true);
                     for (int i = 0; i < recyclerView.getAdapter().getItemCount(); i++) {
                         checkarrayvis.set(i,true);
                         notifyItemChanged(i);
                     }
-
+                    LinearLayout linearLayout=(LinearLayout) view.getRootView().findViewById(R.id.celldeleteadded);
+                    linearLayout.setVisibility(View.VISIBLE);
                     return true;
                 }
                 else{

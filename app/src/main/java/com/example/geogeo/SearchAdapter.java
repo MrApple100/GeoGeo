@@ -9,25 +9,29 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder> {
-    private int staticTag=0;
+    private static int staticTag=-1;
     private  final LayoutInflater inflater;
     private final ArrayList<City> cities;
+    private final ArrayList<Integer> arrayTorFadded;
 
-    SearchAdapter(Context context, ArrayList<City> cities) {
+    SearchAdapter(Context context, ArrayList<City> cities,ArrayList<Integer> arrayTorFadded) {
         this.cities = cities;
         this.inflater = LayoutInflater.from(context);
+        this.arrayTorFadded=arrayTorFadded;
+
     }
 
     @Override
     public SearchAdapter.ViewHolder onCreateViewHolder( ViewGroup parent, int viewType) {
         View view = inflater.inflate(R.layout.onecityelement, parent, false);
-        view.setTag(staticTag);
+        staticTag++;
         return new SearchAdapter.ViewHolder(view);
     }
 
@@ -38,9 +42,17 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         holder.NameCountryView.setText(city.getNameCountry());
         holder.Longitude.setText("Долгота :"+city.getLongitude());
         holder.Latitude.setText("Широта :"+city.getLatitude());
-
+        int idcity = (city.getLongitude() + city.getLatitude()).hashCode();
+        Boolean TorF=false;
+        for(int i=0;i<arrayTorFadded.size();i++){
+            if(arrayTorFadded.get(i)==idcity) {
+                TorF=true;
+            }
+        }
+        if(TorF){
+            holder.Add.setBackground(ContextCompat.getDrawable(holder.itemView.getRootView().getContext(),R.drawable.nullbackground));
+        }
         holder.Add.setTag("{\"coord\":"+"{\"idtag\":\""+(staticTag)+"\",\"name\":\""+city.getNameCity()+"\",\"country\":\""+city.getNameCountry()+"\",\"lon\":\""+city.getLongitude()+"\",\"lat\":\""+city.getLatitude()+"\"}}");
-        staticTag++;
     }
 
 
