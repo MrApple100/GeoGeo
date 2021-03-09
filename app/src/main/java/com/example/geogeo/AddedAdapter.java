@@ -2,6 +2,7 @@ package com.example.geogeo;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.PorterDuff;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -71,6 +73,8 @@ public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
                     }
                     LinearLayout linearLayout=(LinearLayout) view.getRootView().findViewById(R.id.celldeleteadded);
                     linearLayout.setVisibility(View.VISIBLE);
+                    Button button=(Button) view.getRootView().findViewById(R.id.exit);
+                    button.setBackground(ContextCompat.getDrawable(view.getRootView().getContext(),R.drawable.baseline_clear_24));
                     return true;
                 }
                 else{
@@ -101,7 +105,24 @@ public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
             holder.checkBox.setChecked(false);
         }
         holder.checkBox.setTag("{\"coord\":"+"{\"idtag\":\""+city.getId()+"\",\"name\":\""+city.getNameCity()+"\",\"country\":\""+city.getCountry()+"\",\"lon\":\""+city.getLon()+"\",\"lat\":\""+city.getLat()+"\"}}");
-
+        //меняю цвет в зависимости от темп
+        if(Integer.parseInt(holder.Degree.getText()+"")>4){
+            if(Integer.parseInt(holder.Degree.getText()+"")>15){
+                holder.itemView.setBackground(ContextCompat.getDrawable(holder.itemView.getContext(),R.drawable.backoneaddedcity_warm));
+            }else{
+                holder.itemView.setBackground(ContextCompat.getDrawable(holder.itemView.getContext(),R.drawable.backoneaddedcity_neitral_warm));
+            }
+        }else{
+            if(Integer.parseInt(holder.Degree.getText()+"")<-15){
+                holder.itemView.setBackground(ContextCompat.getDrawable(holder.itemView.getContext(),R.drawable.backoneaddedcity_cold));
+            }else{
+                if(Integer.parseInt(holder.Degree.getText()+"")<-4) {
+                    holder.itemView.setBackground(ContextCompat.getDrawable(holder.itemView.getContext(), R.drawable.backoneaddedcity_neitral_cold));
+                }else{
+                    holder.itemView.setBackground(ContextCompat.getDrawable(holder.itemView.getContext(), R.drawable.backoneaddedcity_neitral));
+                }
+            }
+        }
     }
 
 

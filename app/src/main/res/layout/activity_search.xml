@@ -52,6 +52,7 @@
         android:textColorHint="@color/hint"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
+        android:clickable="true"
         android:background="@drawable/nullbackground"
         android:singleLine="true">
     </EditText>
@@ -59,8 +60,10 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/citylist"
-        android:layout_width="match_parent"
+        android:layout_marginTop="20dp"
+        android:layout_width="360dp"
         android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         android:layout_gravity="center_horizontal"
         android:layout_below="@+id/uppersearch">

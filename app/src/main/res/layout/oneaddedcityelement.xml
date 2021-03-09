@@ -4,7 +4,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="120dp"
+    android:layout_height="100dp"
+    android:layout_marginVertical="7dp"
     android:clickable="true"
     android:longClickable="true"
     android:onClick="ChooseCityfromAdded"
@@ -96,9 +97,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:gravity="top"
-                android:text="°C"
+                android:text="°"
                 android:textColor="@android:color/white"
-                android:textSize="20dp">
+                android:textSize="30dp">
             </TextView>
         </LinearLayout>
     </LinearLayout>

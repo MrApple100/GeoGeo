@@ -15,6 +15,7 @@ import android.text.TextWatcher;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -93,6 +94,21 @@ public class ViewSearch extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if(String.valueOf(s).compareTo("")!=0) {
+                    //сброс удаления
+                    if (AddedAdapter.getTimeforSelect()) {
+                        AddedAdapter.setTimeforselect(false);
+                        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.celldeleteadded);
+                        linearLayout.setVisibility(View.GONE);
+                        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.citylist);
+                        for (int i = 0; i < recyclerView.getAdapter().getItemCount(); i++) {
+                            addedAdapter.setCheckarrayvisByPos(i, false);
+                            addedAdapter.setCheckarraycheckByPos(i, false);
+                            addedAdapter.notifyItemChanged(i);
+                        }
+                        Button button=(Button) findViewById(R.id.exit);
+                        button.setBackground(ContextCompat.getDrawable(getApplicationContext(),R.drawable.baseline_keyboard_arrow_left_20));
+                    }
+
                     kolchanges++;
                     String stringofword = String.valueOf(s);
                     System.out.println("++++++++++" + stringofword);
@@ -134,9 +150,10 @@ public class ViewSearch extends AppCompatActivity {
             }
         };
         editsity.addTextChangedListener(textWatcher);
-        editsity.setOnClickListener(new View.OnClickListener() {
+        editsity.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View v) {
+            public boolean onTouch(View v, MotionEvent event) {
+                //сброс удаления
                 if (AddedAdapter.getTimeforSelect()) {
                     AddedAdapter.setTimeforselect(false);
                     LinearLayout linearLayout = (LinearLayout) findViewById(R.id.celldeleteadded);
@@ -147,7 +164,10 @@ public class ViewSearch extends AppCompatActivity {
                         addedAdapter.setCheckarraycheckByPos(i, false);
                         addedAdapter.notifyItemChanged(i);
                     }
+                    Button button=(Button) findViewById(R.id.exit);
+                    button.setBackground(ContextCompat.getDrawable(getApplicationContext(),R.drawable.baseline_keyboard_arrow_left_20));
                 }
+                return false;
             }
         });
 
@@ -178,6 +198,25 @@ public class ViewSearch extends AppCompatActivity {
             });
         }
     }
+//проверить позже
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        kolchanges=0;
+        if(String.valueOf(editsity.getText()).compareTo("")==0) {
+
+            String stringofword = editsity.getText()+"";
+            registerReceiver(receiverlistofcities, new IntentFilter(Search.CHANNEL));
+            intentsearch.putExtra("city", stringofword);
+            intentsearch.putExtra("numchange", kolchanges);
+            cityArrayList.clear();
+            searchcitylist.removeAllViewsInLayout();
+            searchcitylist.setVisibility(View.GONE);
+            textnotfound.setText("Поиск...");
+            stopService(intentsearch);
+            startService(intentsearch);
+        }
+    }
 
     @Override
     protected void onPause() {
@@ -193,13 +232,18 @@ public class ViewSearch extends AppCompatActivity {
         }
         if(AddedAdapter.getTimeforSelect()){
             AddedAdapter.setTimeforselect(false);
+            LinearLayout linearLayout=(LinearLayout) findViewById(R.id.celldeleteadded);
+            linearLayout.setVisibility(View.GONE);
             RecyclerView recyclerView=(RecyclerView) findViewById(R.id.citylist);
             for(int i=0;i<recyclerView.getAdapter().getItemCount();i++){
                 addedAdapter.setCheckarrayvisByPos(i,false);
                 addedAdapter.setCheckarraycheckByPos(i,false);
                 addedAdapter.notifyItemChanged(i);
             }
+            Button button=(Button) findViewById(R.id.exit);
+            button.setBackground(ContextCompat.getDrawable(getApplicationContext(),R.drawable.baseline_keyboard_arrow_left_20));
         }
+
     }
 
     @Override
@@ -217,13 +261,18 @@ public class ViewSearch extends AppCompatActivity {
         //возвращаем в стандартное состояние addedarray
         if(AddedAdapter.getTimeforSelect()){
             AddedAdapter.setTimeforselect(false);
+            LinearLayout linearLayout=(LinearLayout) findViewById(R.id.celldeleteadded);
+            linearLayout.setVisibility(View.GONE);
             RecyclerView recyclerView=(RecyclerView) findViewById(R.id.citylist);
             for(int i=0;i<recyclerView.getAdapter().getItemCount();i++){
                     addedAdapter.setCheckarrayvisByPos(i,false);
                     addedAdapter.setCheckarraycheckByPos(i,false);
                     addedAdapter.notifyItemChanged(i);
                 }
+            Button button=(Button) findViewById(R.id.exit);
+            button.setBackground(ContextCompat.getDrawable(getApplicationContext(),R.drawable.baseline_keyboard_arrow_left_20));
         }
+
 
     }
     protected BroadcastReceiver receiverlistofcities = new BroadcastReceiver() {
@@ -420,6 +469,9 @@ public class ViewSearch extends AppCompatActivity {
                 addedAdapter.setCheckarraycheckByPos(i,false);
                 addedAdapter.notifyItemChanged(i);
             }
+            Button button=(Button) findViewById(R.id.exit);
+            button.setBackground(ContextCompat.getDrawable(getApplicationContext(),R.drawable.baseline_keyboard_arrow_left_20));
+
         }
     }
     public void DeleteAdded(View view){
@@ -465,5 +517,8 @@ public class ViewSearch extends AppCompatActivity {
             addedAdapter.setCheckarraycheckByPos(i,false);
             addedAdapter.notifyItemChanged(i);
         }
+        Button button=(Button) findViewById(R.id.exit);
+        button.setBackground(ContextCompat.getDrawable(getApplicationContext(),R.drawable.baseline_keyboard_arrow_left_20));
+
     }
 }

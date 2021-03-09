@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">GeoGeo</string>
     <string name="MyAppID">IMVE6I870S</string>
-    <string name="MyApiKey">0fcf4942abacc188e8c34a958eef7cdf</string>
+    <string name="MyApiKey">11380ed4b5872057ec582d1289415365</string>
+    <string name="provider_gps">GPS</string>
+    <string name="provider_network">Network</string>
+    <string name="location_settings">Location settings</string>
 </resources>
