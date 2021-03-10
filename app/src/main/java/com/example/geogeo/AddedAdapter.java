@@ -93,7 +93,7 @@ public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
         holder.NameCountryView.setText(city.getCountry());
         holder.Longitude.setText("Долгота :"+city.getLon());
         holder.Latitude.setText("Широта :"+city.getLat());
-        holder.Degree.setText(city.degree);
+        holder.Degree.setText(city.getDegree());
         if(checkarrayvis.get(position)){
             holder.checkBox.setVisibility(View.VISIBLE);
         }else{

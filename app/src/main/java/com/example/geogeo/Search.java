@@ -64,7 +64,7 @@ public class Search extends Service{
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Toast.makeText(getApplication(),"SearchStarted",Toast.LENGTH_LONG);
-        String wordofcity=intent.getStringExtra("city");
+        String wordofcity=intent.getStringExtra("city").trim();
         int numchange=intent.getIntExtra("numchange",-1);
         anotherThread = new AnotherThread(wordofcity,numchange);
         System.out.println("++++"+wordofcity);

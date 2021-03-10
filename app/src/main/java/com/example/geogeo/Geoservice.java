@@ -15,6 +15,7 @@ public class Geoservice extends Service{
     public static final String CHANNEL= "GEO";
     public static final String INFOCurrent = "INFOCurrent";
     public static final String PERMISSION = "PERMISSION";
+    private String Action;
     @Override
     public void onCreate() {
         Toast.makeText(getApplication(),"ServiceCreated",Toast.LENGTH_LONG);
@@ -25,6 +26,7 @@ public class Geoservice extends Service{
         Toast.makeText(getApplication(),"ServiceStarted",Toast.LENGTH_LONG);
         AnotherThread anotherThread;
         AnotherThreadlonlat anotherThreadlonlat;
+        AnotherThreadbymygeopos anotherThreadbymygeopos;
         try {
             String permission = intent.getStringExtra(PERMISSION);
             if(permission.compareTo("city")==0){
@@ -34,8 +36,14 @@ public class Geoservice extends Service{
             }else if(permission.compareTo("lonlat")==0){
                 String lon=intent.getStringExtra("lon");
                 String lat=intent.getStringExtra("lat");
-                anotherThreadlonlat = new AnotherThreadlonlat(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&appid=11380ed4b5872057ec582d1289415365"));
+                anotherThreadlonlat = new AnotherThreadlonlat(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"));
                 anotherThreadlonlat.start();
+            }else if(permission.compareTo("bymygeopos")==0){
+                Action = intent.getStringExtra("ACTION");
+                String lon=intent.getStringExtra("lon");
+                String lat=intent.getStringExtra("lat");
+                anotherThreadbymygeopos = new AnotherThreadbymygeopos(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"));
+                anotherThreadbymygeopos.start();
             }
         }catch(IOException e){
             e.getStackTrace();
@@ -94,7 +102,33 @@ public class Geoservice extends Service{
                 }
                 Intent intent=new Intent(CHANNEL);
                 intent.putExtra(INFOCurrent,result);
-                intent.putExtra(PERMISSION,"id");
+                intent.putExtra(PERMISSION,"lonlat");
+                sendBroadcast(intent);
+            }
+
+        }
+    }
+    public class AnotherThreadbymygeopos extends Thread{
+        URL url;
+        AnotherThreadbymygeopos(URL url){
+            this.url=url;
+        }
+        @Override
+        public void run() {
+            synchronized (url) {
+                String result;
+                try{
+                    Scanner inputstream = new Scanner((InputStream) url.getContent());
+                    result="{\"gis\":" +inputstream.nextLine()+"}";
+                    System.out.println("3333"+result);
+                }catch(IOException eio){
+                    result= eio.toString();
+                }
+                Intent intent=new Intent(CHANNEL);
+                intent.putExtra(INFOCurrent,result);
+                intent.putExtra(PERMISSION,"bymygeopos");
+                intent.putExtra("ACTION",Action);
+                System.out.println("SEND");
                 sendBroadcast(intent);
             }
 

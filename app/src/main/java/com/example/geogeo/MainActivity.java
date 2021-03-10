@@ -1,13 +1,16 @@
 package com.example.geogeo;
 
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import android.Manifest;
 import android.animation.ArgbEvaluator;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
@@ -15,6 +18,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.TransitionDrawable;
@@ -22,6 +26,8 @@ import android.os.Build;
 import android.os.Bundle;
 
 
+import android.os.Handler;
+import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -45,6 +51,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Time;
+import java.util.concurrent.Executors;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -53,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     TextView textsky;
     TextView textsity;
     TextView Maintext;
+    int TAG_CODE_PERMISSION_LOCATION= 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +73,12 @@ public class MainActivity extends AppCompatActivity {
         Button search=(Button) findViewById(R.id.search_go_btn);
         Maintext=(TextView) findViewById(R.id.text1);
 
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        && ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION)== PackageManager.PERMISSION_GRANTED){
+
+        }else{
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},TAG_CODE_PERMISSION_LOCATION);
+        }
 
         search.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,31 +134,26 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                if(intent.getStringExtra(Geoservice.PERMISSION).compareTo("city")==0) {
+                if(intent.getStringExtra(Geoservice.PERMISSION).compareTo("lonlat")==0) {
                     String intentstring = intent.getStringExtra(Geoservice.INFOCurrent);
                     JSONObject jsonweathercurrent = new JSONObject(intentstring);
                     JSONObject jsonbase = (JSONObject) jsonweathercurrent.get("gis");
-
-                    String sity = jsonbase.getString("name");
-                    System.out.println(sity);
-                    String wedescr = ((JSONObject) ((JSONArray) jsonbase.get("weather")).get(0)).getString("description");
+                    System.out.println("WE ARE HERE");
+                    JSONObject jsonbasecurrent=(JSONObject) jsonbase.get("current");
+                    String wedescr = ((JSONObject) ((JSONArray) jsonbasecurrent.get("weather")).get(0)).getString("description");
                     System.out.println(wedescr);
-                    int curdegK = ((JSONObject) jsonbase.get("main")).getInt("temp");
+                    int curdegK = ((JSONObject) jsonbase.get("current")).getInt("temp");
                     int curdeg = curdegK - 273;
                     System.out.println(curdeg);
-                    textsity.setText(sity);
                     textdegree.setText(String.valueOf(curdeg));
                     textsky.setText(wedescr); //выводим  JSON-массив в текстовое поле
-                    //int fon = ContextCompat.getDrawable(getApplication(),R.drawable.sidewarm);
-                    //final ValueAnimator fonanimation=ValueAnimator.ofObject(new ArgbEvaluator(),ContextCompat.getDrawable(getApplication(),R.drawable.sidewarm),
-                    //                                                                     ContextCompat.getDrawable(getApplication(),R.drawable.sidehalfsun));
-                    // ObjectAnimator.ofObject(fon,"backgroundColor",new ArgbEvaluator(),getResources().getColor(R.color.black),getResources().getColor(R.color.white)).setDuration(1000).start();
+                    unregisterReceiver(receivercurrent);
                 }
             } catch (JSONException e) {
                 e.getStackTrace();
                 Toast.makeText(MainActivity.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
             }
-            unregisterReceiver(receivercurrent);
+
         }
     };
 
@@ -153,19 +162,27 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         switch (resultCode) {
                 case RESULT_OK:
-                    String NameCity=data.getStringExtra(ViewSearch.RESULTSEARCH);
-                    if(NameCity.compareTo("")!=0){
-                        String city =NameCity;
-
+                    System.out.println("GETRESULT");
+                    String strlon=data.getStringExtra(ViewSearch.LONGITUDE);
+                    String strlat = data.getStringExtra(ViewSearch.LATITUDE);
+                    textsity.setText(data.getStringExtra("NAMECITY"));
                         registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
                         Intent intent = new Intent(getApplication(), Geoservice.class);
-                        intent.putExtra("city",city);
-                        intent.putExtra(Geoservice.PERMISSION,"city");
+                        intent.putExtra("lon",strlon);
+                        intent.putExtra("lat",strlat);
+                        intent.putExtra(Geoservice.PERMISSION,"lonlat");
+                        stopService(intent);
                         startService(intent);
-                    }
                     break;
             case RESULT_CANCELED:
                     break;
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(grantResults[0]==PackageManager.PERMISSION_GRANTED && grantResults[1]==PackageManager.PERMISSION_GRANTED){
+            System.out.println("OUUU YEAR");
         }
     }
 }

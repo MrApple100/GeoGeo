@@ -5,24 +5,33 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.os.Bundle;
 import android.os.IBinder;
 
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Scanner;
 
 
 public class MyGeoPositisionService extends Service {
     private LocationManager locationManager;
     public static final String CHANNEL = "MyGEOPosition";
-    public static final String INFOCurrent = "INFOCurrent";
+    public static final String INFOMYGEOPOSOTION = "INFOMYGEOPOSOTION";
     public static final String PERMISSION = "PERMISSION";
-    String StatusGPS;
-    String StatusNet;
     String LocationGPS;
     String LocationNet;
     String EnabledGPS;
     String EnabledNet;
+    String rezult;
+    Intent intentresult = new Intent(CHANNEL);
+    String imhereGPS;
+    String imhereNet;
+    int kol=0;
+    int sec=0;
 
     @Override
     public void onCreate() {
@@ -39,15 +48,16 @@ public class MyGeoPositisionService extends Service {
 
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000 * 0, 100, locationListener);
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000 * 0, 100, locationListener);
-        }catch (SecurityException e){
 
+            imhereGPS = formatLocation(locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER));
+            imhereNet = formatLocation(locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER));
+        }catch (SecurityException e){
+            System.out.println("ERROR"+e.getLocalizedMessage());
+            e.getStackTrace();
         }
         checkEnabled();
-        String result="{\"geoinfo\":"+"{\"StatusGPS\":\""+StatusGPS+"\",\"StatusNet\":\""+StatusNet+"\",\"LocationGPS\":\""+LocationGPS+"\",\"LocationNet\":\""+LocationGPS+"\",\"EnabledGPS\":\""+EnabledGPS+"\",\"EnabledNet\":"+EnabledNet+"\"}}";
-        Intent intentresult=new Intent(CHANNEL);
-        intent.putExtra(INFOCurrent,result);
-        intent.putExtra(PERMISSION,"mygeopos");
-        sendBroadcast(intent);
+        AnotherThread anotherThread=new AnotherThread(intent);
+        anotherThread.run();
         return START_NOT_STICKY;
 
     }
@@ -64,11 +74,13 @@ public class MyGeoPositisionService extends Service {
 
         @Override
         public void onLocationChanged(Location location) {
+            System.out.println("LOCATION"+location);
             showLocation(location);
         }
 
         @Override
         public void onProviderDisabled(String provider) {
+            System.out.println(provider);
             checkEnabled();
         }
 
@@ -82,24 +94,20 @@ public class MyGeoPositisionService extends Service {
             }
         }
 
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-            if (provider.equals(LocationManager.GPS_PROVIDER)) {
-                StatusGPS = (String.valueOf(status));
-            } else if (provider.equals(LocationManager.NETWORK_PROVIDER)) {
-                StatusNet = (String.valueOf(status));
-            }
-        }
     };
     private void showLocation(Location location) {
-        if (location == null)
+        if (location == null) {
+            System.out.println("LOCATION");
             return;
+        }
         if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
             LocationGPS = (formatLocation(location));
-        } else if (location.getProvider().equals(
-                LocationManager.NETWORK_PROVIDER)) {
+            kol++;
+        } else if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER)) {
             LocationNet = (formatLocation(location));
+            kol++;
         }
+
     }
     private String formatLocation(Location location) {
         if (location == null)
@@ -109,5 +117,34 @@ public class MyGeoPositisionService extends Service {
     private void checkEnabled() {
         EnabledGPS = ("" + locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER));
         EnabledNet = ("" + locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER));
+        kol++;
+    }
+    public class AnotherThread extends Thread{
+        Intent intent;
+        AnotherThread(Intent intent){
+            this.intent=intent;
+        }
+        @Override
+        public void run() {
+            System.out.println("STARTTREAD");
+                try {
+                    while (kol < 3 && sec != 1) {
+                        sleep(1000);
+                        sec++;
+                    }
+                }catch (Exception e){
+
+                }
+                   rezult = "{\"geoinfo\":" + "{\"LocationGPS\":\"" + imhereGPS + "\",\"LocationNet\":\"" + imhereNet + "\",\"EnabledGPS\":\"" + EnabledGPS + "\",\"EnabledNet\":" + EnabledNet + "\"}}";
+                    intentresult.putExtra("INFOMYGEOPOSOTION",rezult);
+                    if (intent.getStringExtra(PERMISSION).compareTo("mygeopos") == 0) {
+                        intentresult.putExtra(PERMISSION, "mygeopos");
+                    } else if (intent.getStringExtra(PERMISSION).compareTo("mygeoposNEW") == 0) {
+                        intentresult.putExtra(PERMISSION, "mygeoposNEW");
+                    }
+
+            sendBroadcast(intentresult);
+
+        }
     }
 }

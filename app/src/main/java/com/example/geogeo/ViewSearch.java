@@ -46,7 +46,11 @@ import java.util.concurrent.Executors;
 public class ViewSearch extends AppCompatActivity {
     private AppDataBase dataBase;
     private AddedCityDao addedCityDao;
-    public static String RESULTSEARCH="resultsearch";
+    private AppDataMyPos datamypos;
+    private MyGeoPosition myGeoPosition;
+    private MyGeoPositionDao myGeoPositionDao;
+    public static String LONGITUDE = "LONGITUDE";
+    public static String LATITUDE = "LATITUDE";
     public static int kolchanges;
     EditText editsity;
     TextView textnotfound;
@@ -55,7 +59,9 @@ public class ViewSearch extends AppCompatActivity {
     ArrayList<City> citiesadded=new ArrayList<>();
     HashMap<Integer,String> hashmapdegree=new HashMap<>();
     RecyclerView searchcitylist;
+    RecyclerView mygeoposlist;
     AddedAdapter addedAdapter;
+    MyGeoPosAdapter myGeoPosAdapter;
     Intent intentsearch;
     Intent intentgeo;
 
@@ -68,6 +74,12 @@ public class ViewSearch extends AppCompatActivity {
             database.execSQL("ALTER TABLE AddedCity ADD COLUMN degree STRING DEFAULT 0 not NULL");
         }
     };
+    public static final Migration MIGRATIONmygeopos1_2 = new Migration(1,2) {
+        @Override
+        public void migrate(final SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE MyGeoPosition ADD COLUMN degree STRING DEFAULT 0 not NULL");
+        }
+    };
     @Override
     protected void onCreate( Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,10 +89,14 @@ public class ViewSearch extends AppCompatActivity {
         dataBase =(AppDataBase) AppDataBase.getInstance(this,"database").addMigrations(MIGRATION1_2).allowMainThreadQueries().build();
         addedCityDao=dataBase.addedCityDao();
 
+        datamypos = (AppDataMyPos) AppDataMyPos.getInstance(this,"datamygeopos").addMigrations(MIGRATIONmygeopos1_2).allowMainThreadQueries().build();
+        myGeoPositionDao = datamypos.myGeoPositionDao();
+
         setContentView(R.layout.activity_search);
         editsity=(EditText) findViewById(R.id.searchword);
         textnotfound=(TextView) findViewById(R.id.notfound);
         searchcitylist=(RecyclerView) findViewById(R.id.citylist);
+        mygeoposlist=(RecyclerView) findViewById(R.id.mygeoposlist);
         intentsearch = new Intent(ViewSearch.this, Search.class);
         intentgeo = new Intent(ViewSearch.this, Geoservice.class);
 
@@ -118,10 +134,12 @@ public class ViewSearch extends AppCompatActivity {
                     cityArrayList.clear();
                     searchcitylist.removeAllViewsInLayout();
                     searchcitylist.setVisibility(View.GONE);
+                    mygeoposlist.setVisibility(View.GONE);
                     textnotfound.setText("Поиск...");
                     stopService(intentsearch);
                     startService(intentsearch);
                 }else{
+                    mygeoposlist.setVisibility(View.VISIBLE);
                     searchcitylist.setVisibility(View.VISIBLE);
                     kolchanges=0;
                     textnotfound.setText("");
@@ -130,6 +148,7 @@ public class ViewSearch extends AppCompatActivity {
                         public void handleMessage(@NonNull Message msg) {
                             super.handleMessage(msg);
                             searchcitylist.setAdapter(addedAdapter);
+                            mygeoposlist.setAdapter(myGeoPosAdapter);
                         }
                     };
                     Executors.newSingleThreadExecutor().execute(new Runnable() {
@@ -137,6 +156,7 @@ public class ViewSearch extends AppCompatActivity {
                         public void run() {
                             System.out.println("ADDDD"+addedCityDao.getAll());
                             addedAdapter= new AddedAdapter(ViewSearch.this, addedCityDao.getAll());
+                            myGeoPosAdapter = new MyGeoPosAdapter(ViewSearch.this, myGeoPositionDao.getmygeopos("mygeopos".hashCode()));
                             handler.sendEmptyMessage(1);
                         }
                     });
@@ -170,8 +190,27 @@ public class ViewSearch extends AppCompatActivity {
                 return false;
             }
         });
-
-        }
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                if (myGeoPositionDao.getmygeopos(("mygeopos").hashCode()) == null) {
+                    registerReceiver(receiverGeoPosition, new IntentFilter(MyGeoPositisionService.CHANNEL));
+                    Intent intentmygeopos=new Intent(ViewSearch.this,MyGeoPositisionService.class);
+                    intentmygeopos.putExtra(MyGeoPositisionService.PERMISSION,"mygeoposNEW");
+                    startService(intentmygeopos);
+                }else{
+                    /*
+                    myGeoPosAdapter = new MyGeoPosAdapter(ViewSearch.this, myGeoPositionDao.getmygeopos("mygeopos".hashCode()));
+                    mygeoposlist.setAdapter(myGeoPosAdapter);
+                    */
+                    registerReceiver(receiverGeoPosition, new IntentFilter(MyGeoPositisionService.CHANNEL));
+                    Intent intentmygeopos=new Intent(ViewSearch.this,MyGeoPositisionService.class);
+                    intentmygeopos.putExtra(MyGeoPositisionService.PERMISSION,"mygeopos");
+                    startService(intentmygeopos);
+                }
+            }
+        });
+    }
 
 
     @Override
@@ -181,6 +220,7 @@ public class ViewSearch extends AppCompatActivity {
         if(String.valueOf(editsity.getText()).compareTo("")==0) {
             textnotfound.setText("");
             searchcitylist.setVisibility(View.VISIBLE);
+            mygeoposlist.setVisibility(View.VISIBLE);
             Handler handler = new Handler() {
                 @Override
                 public void handleMessage(@NonNull Message msg) {
@@ -203,7 +243,7 @@ public class ViewSearch extends AppCompatActivity {
     protected void onRestart() {
         super.onRestart();
         kolchanges=0;
-        if(String.valueOf(editsity.getText()).compareTo("")==0) {
+        if(String.valueOf(editsity.getText()).compareTo("")!=0) {
 
             String stringofword = editsity.getText()+"";
             registerReceiver(receiverlistofcities, new IntentFilter(Search.CHANNEL));
@@ -332,7 +372,6 @@ public class ViewSearch extends AppCompatActivity {
                     intentgeo.putExtra("lon", cityArrayList.get(i).getLongitude());
                     intentgeo.putExtra("lat", cityArrayList.get(i).getLatitude());
                     intentgeo.putExtra(Geoservice.PERMISSION,"lonlat");
-                    stopService(intentgeo);
                     startService(intentgeo);
                 }
 
@@ -356,7 +395,8 @@ public class ViewSearch extends AppCompatActivity {
     protected BroadcastReceiver receivercurrentSearch = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(intent.getStringExtra(Geoservice.PERMISSION).compareTo("id")==0) {
+            System.out.println("-----1111111-------");
+            if(intent.getStringExtra(Geoservice.PERMISSION).compareTo("lonlat")==0) {
                 System.out.println("0909090"+intent.getStringExtra(Geoservice.INFOCurrent));
                 try {
                     String intentstring = intent.getStringExtra(Geoservice.INFOCurrent);
@@ -368,8 +408,107 @@ public class ViewSearch extends AppCompatActivity {
                     String strlat=jsonbase.getString("lat");
                     int curdeg = curdegK - 273;
                     String degree = curdeg + "";
+                    System.out.println("DEGREE"+degree+"//"+strlon+"/\\"+strlat);
                     hashmapdegree.put((strlon+strlat).hashCode(),degree);
-                    unregisterReceiver(receivercurrentSearch);
+                    System.out.println((strlon+strlat).hashCode());
+                    //unregisterReceiver(receivercurrentSearch);
+                } catch (JSONException e) {
+                    e.getStackTrace();
+                    Toast.makeText(ViewSearch.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
+                }
+            }else{
+                if(intent.getStringExtra(Geoservice.PERMISSION).compareTo("bymygeopos")==0){
+                    System.out.println("070707070"+intent.getStringExtra(Geoservice.INFOCurrent));
+                    try {
+                        String intentstring = intent.getStringExtra(Geoservice.INFOCurrent);
+                        JSONObject jsonweathercurrent = new JSONObject(intentstring);
+                        JSONObject jsonbase = (JSONObject) jsonweathercurrent.get("gis");
+
+                        int curdegK = ((JSONObject) jsonbase.get("current")).getInt("temp");
+                        String strlon=jsonbase.getString("lon");
+                        String strlat=jsonbase.getString("lat");
+                        int curdeg = curdegK - 273;
+                        String degree = curdeg + "";
+                        myGeoPosition =new MyGeoPosition();
+                        myGeoPosition.setMygeopos("mygeopos".hashCode());
+                        System.out.println(strlat+"///"+strlon);
+                        myGeoPosition.setLon(strlon);
+                        myGeoPosition.setLat(strlat);
+                        myGeoPosition.setDegree(degree);
+                        Handler handlernew = new Handler() {
+                            @Override
+                            public void handleMessage(@NonNull Message msg) {
+                                super.handleMessage(msg);
+                                mygeoposlist.setAdapter(myGeoPosAdapter);
+                            }
+                        };
+                        Handler handlerupdate = new Handler() {
+                            @Override
+                            public void handleMessage(@NonNull Message msg) {
+                                super.handleMessage(msg);
+                                mygeoposlist.setAdapter(myGeoPosAdapter);
+                            }
+                        };
+                        Executors.newSingleThreadExecutor().execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                if(intent.getStringExtra("ACTION").compareTo("new")==0){
+                                    myGeoPositionDao.insert(myGeoPosition);
+                                    myGeoPosAdapter =new MyGeoPosAdapter(ViewSearch.this,myGeoPositionDao.getmygeopos("mygeopos".hashCode()));
+                                    handlernew.sendEmptyMessage(1);
+                                }else{
+                                    myGeoPositionDao.update(myGeoPosition);
+                                    myGeoPosAdapter =new MyGeoPosAdapter(ViewSearch.this,myGeoPositionDao.getmygeopos("mygeopos".hashCode()));
+                                    handlerupdate.sendEmptyMessage(1);
+                                }
+
+
+                            }
+                        });
+
+                        unregisterReceiver(receivercurrentSearch);
+                    } catch (JSONException e) {
+                        e.getStackTrace();
+                        Toast.makeText(ViewSearch.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+        }
+    };
+    protected BroadcastReceiver receiverGeoPosition = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getStringExtra(MyGeoPositisionService.PERMISSION).compareTo("mygeopos")==0 || intent.getStringExtra(MyGeoPositisionService.PERMISSION).compareTo("mygeoposNEW")==0) {
+                System.out.println("MYGEOPOSITIONSERVICE"+intent.getStringExtra(MyGeoPositisionService.INFOMYGEOPOSOTION));
+                try {
+                    String intentstring = intent.getStringExtra(MyGeoPositisionService.INFOMYGEOPOSOTION);
+                    JSONObject jsonpositioninfo = new JSONObject(intentstring);
+                    JSONObject jsonbase = (JSONObject) jsonpositioninfo.get("geoinfo");
+                    String LocationGPS = jsonbase.getString("LocationGPS");
+                    String LocationNet = jsonbase.getString("LocationNet");
+                    String EnabledGPS = jsonbase.getString("EnabledGPS");
+                    String EnabledNet = jsonbase.getString("EnabledNet");
+                    String strlon="";
+                    String strlat="";
+                    System.out.println(LocationGPS);
+                    if(LocationGPS.compareTo("")==0){
+                        strlon=LocationNet.split("/")[1];
+                        strlat=LocationNet.split("/")[0];
+                    }else{
+                        strlon=LocationGPS.split("/")[1];
+                        strlat=LocationGPS.split("/")[0];
+                    }
+                    registerReceiver(receivercurrentSearch,new IntentFilter(Geoservice.CHANNEL));
+                    intentgeo.putExtra(MyGeoPositisionService.PERMISSION,"bymygeopos");
+                    if(intent.getStringExtra(MyGeoPositisionService.PERMISSION).compareTo("mygeopos")==0){
+                        intentgeo.putExtra("ACTION","update");
+                    }else if(intent.getStringExtra(MyGeoPositisionService.PERMISSION).compareTo("mygeoposNEW")==0){
+                        intentgeo.putExtra("ACTION","new");
+                    }
+                    intentgeo.putExtra("lon",strlon);
+                    intentgeo.putExtra("lat",strlat);
+                    startService(intentgeo);
+                    unregisterReceiver(receiverGeoPosition);
                 } catch (JSONException e) {
                     e.getStackTrace();
                     Toast.makeText(ViewSearch.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
@@ -381,12 +520,13 @@ public class ViewSearch extends AppCompatActivity {
             kolchanges = 0;
             stopService(new Intent(ViewSearch.this, Search.class));
             stopService(new Intent(ViewSearch.this,Geoservice.class));
-            TextView NameCity = (TextView) view.findViewById(R.id.NameCity);
-            System.out.println(NameCity.getText());
-            TextView NameCountry = (TextView) view.findViewById(R.id.NameCountry);
-            String result = NameCity.getText() + "," + NameCountry.getText();
+            TextView Longitude = (TextView) view.findViewById(R.id.longitude);
+            TextView Latitude = (TextView) view.findViewById(R.id.latitude);
+            TextView Namecity = (TextView) view.findViewById(R.id.NameCity);
             Intent intent = new Intent();
-            intent.putExtra(RESULTSEARCH, result);
+            intent.putExtra(LONGITUDE, String.valueOf(Longitude.getText()).split(":")[1]);
+            intent.putExtra(LATITUDE,String.valueOf(Latitude.getText()).split(":")[1]);
+            intent.putExtra("NAMECITY",Namecity.getText());
             setResult(RESULT_OK, intent);
             ViewSearch.this.finish();
 
@@ -396,12 +536,14 @@ public class ViewSearch extends AppCompatActivity {
             kolchanges = 0;
             stopService(new Intent(ViewSearch.this, Search.class));
             stopService(new Intent(ViewSearch.this,Geoservice.class));
-            TextView NameCity = (TextView) view.findViewById(R.id.NameCity);
-            System.out.println(NameCity.getText());
-            TextView NameCountry = (TextView) view.findViewById(R.id.NameCountry);
-            String result = NameCity.getText() + "," + NameCountry.getText();
+            stopService(new Intent(ViewSearch.this, MyGeoPositisionService.class));
+            TextView Longitude = (TextView) view.findViewById(R.id.longitude);
+            TextView Latitude = (TextView) view.findViewById(R.id.latitude);
+            TextView Namecity = (TextView) view.findViewById(R.id.NameCity);
             Intent intent = new Intent();
-            intent.putExtra(RESULTSEARCH, result);
+            intent.putExtra(LONGITUDE, String.valueOf(Longitude.getText()).split(":")[1]);
+            intent.putExtra(LATITUDE,String.valueOf(Latitude.getText()).split(":")[1]);
+            intent.putExtra("NAMECITY",Namecity.getText());
             setResult(RESULT_OK, intent);
             ViewSearch.this.finish();
         }else{
@@ -428,10 +570,11 @@ public class ViewSearch extends AppCompatActivity {
             System.out.println("1");
             int idcity = (jsoncity.getString("lon") + jsoncity.getString("lat")).hashCode();
         String degreecity=hashmapdegree.get(idcity);
+            System.out.println(degreecity);
             System.out.println("2");
             System.out.println(jsoncity.getString("lon") + jsoncity.getString("lat"));
 
-
+            System.out.println((jsoncity.getString("lon")+"/\\"+jsoncity.getString("lat")));
             System.out.println("access"+idcity);
         citiesadded.add(new City(jsoncity.getString("name"),jsoncity.getString("country"),jsoncity.getString("lon"),jsoncity.getString("lat")));
         AddedCity addedCity=new AddedCity(jsoncity.getString("name"),jsoncity.getString("country"),jsoncity.getString("lon"),jsoncity.getString("lat"));
