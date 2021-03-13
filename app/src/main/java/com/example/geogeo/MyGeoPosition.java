@@ -10,7 +10,15 @@ public class MyGeoPosition {
     String degree;
     String lon;
     String lat;
+    String lastjson;
 
+    public String getLastjson() {
+        return lastjson;
+    }
+
+    public void setLastjson(String lastjson) {
+        this.lastjson = lastjson;
+    }
 
     public String getDegree() {
         return degree;

@@ -39,7 +39,6 @@ public class MyGeoPosAdapter extends RecyclerView.Adapter<MyGeoPosAdapter.ViewHo
     @Override
     public MyGeoPosAdapter.ViewHolder onCreateViewHolder( ViewGroup parent, int viewType) {
         View view = inflater.inflate(R.layout.oneaddedcityelement, parent, false) ;
-
         return new MyGeoPosAdapter.ViewHolder(view);
     }
 
@@ -50,10 +49,10 @@ public class MyGeoPosAdapter extends RecyclerView.Adapter<MyGeoPosAdapter.ViewHo
         holder.Longitude.setText("Долгота :"+myGeoPosition.lon);
         holder.Latitude.setText("Широта :"+myGeoPosition.lat);
         holder.Degree.setText(myGeoPosition.getDegree());
-            holder.checkBox.setVisibility(View.GONE);
+        holder.checkBox.setVisibility(View.GONE);
 
-
-        holder.itemView.setTag("{\"coord\":"+"{\"name\":\"Мое местоположение\",\"lon\":\""+myGeoPosition.getLon()+"\",\"lat\":\""+myGeoPosition.getLat()+"\",\"degree\":\""+myGeoPosition.getDegree()+"\"}}");
+        holder.checkBox.setTag("{\"coord\":"+"{\"name\":\"Ятут\",\"lon\":\""+myGeoPosition.getLon()+"\",\"lat\":\""+myGeoPosition.getLat()+"\",\"degree\":\""+myGeoPosition.getDegree()+"\"}}");
+        holder.itemView.setTag(-1);
         //меняю цвет в зависимости от темп
         if(Integer.parseInt(holder.Degree.getText()+"")>4){
             if(Integer.parseInt(holder.Degree.getText()+"")>15){

@@ -61,6 +61,9 @@ public class MainActivity extends AppCompatActivity {
     TextView textsity;
     TextView Maintext;
     int TAG_CODE_PERMISSION_LOCATION= 1;
+    private MyGeoPositionDao myGeoPositionDao;
+    private AppDataMyPos datamypos;
+    private MyGeoPosition myGeoPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,10 +76,40 @@ public class MainActivity extends AppCompatActivity {
         Button search=(Button) findViewById(R.id.search_go_btn);
         Maintext=(TextView) findViewById(R.id.text1);
 
+        datamypos = (AppDataMyPos) AppDataMyPos.getInstance(this, "datamygeo").addMigrations(ViewSearch.MIGRATIONmygeopos1_2,ViewSearch.MIGRATIONmygeopos2_3).allowMainThreadQueries().build();
+        myGeoPositionDao = datamypos.myGeoPositionDao();
+
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         && ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION)== PackageManager.PERMISSION_GRANTED){
-
+            textsity.setText("Погода вокруг");
+            if (myGeoPositionDao.getmygeopos(("mygeopos").hashCode()) != null) {
+                UpdateMain();
+            }
+            Executors.newSingleThreadExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    if (myGeoPositionDao.getmygeopos(("mygeopos").hashCode()) == null) {
+                        registerReceiver(receiverGeoPosition, new IntentFilter(MyGeoPositisionService.CHANNEL));
+                        Intent intentmygeopos = new Intent(MainActivity.this, MyGeoPositisionService.class);
+                        intentmygeopos.putExtra(MyGeoPositisionService.PERMISSION, "mygeoposNEW");
+                        startService(intentmygeopos);
+                    } else {
+                        registerReceiver(receiverGeoPosition, new IntentFilter(MyGeoPositisionService.CHANNEL));
+                        Intent intentmygeopos = new Intent(MainActivity.this, MyGeoPositisionService.class);
+                        intentmygeopos.putExtra(MyGeoPositisionService.PERMISSION, "mygeopos");
+                        startService(intentmygeopos);
+                    }
+                }
+            });
         }else{
+            textsity.setText("Москва");
+            registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
+            Intent intent = new Intent(getApplication(), Geoservice.class);
+            intent.putExtra("lon","37.6156");
+            intent.putExtra("lat","55.7522");
+            intent.putExtra(Geoservice.PERMISSION,"lonlat");
+            stopService(intent);
+            startService(intent);
             ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},TAG_CODE_PERMISSION_LOCATION);
         }
 
@@ -108,14 +141,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         //запрос отправляется раньше основного запроса, поэтому его не видно
-        if((textsity.getText().toString()).compareTo("")!=0){
+        /*if((textsity.getText().toString()).compareTo("")!=0){
             registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
             String city =textsity.getText()+"";
             Intent intent = new Intent(getApplication(), Geoservice.class);
             intent.putExtra("city",city);
             intent.putExtra(Geoservice.PERMISSION,"city");
             startService(intent);
-        }
+        }*/
     }
 
     @Override
@@ -134,12 +167,12 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                if(intent.getStringExtra(Geoservice.PERMISSION).compareTo("lonlat")==0) {
+                if (intent.getStringExtra(Geoservice.PERMISSION).compareTo("lonlat") == 0) {
                     String intentstring = intent.getStringExtra(Geoservice.INFOCurrent);
                     JSONObject jsonweathercurrent = new JSONObject(intentstring);
                     JSONObject jsonbase = (JSONObject) jsonweathercurrent.get("gis");
                     System.out.println("WE ARE HERE");
-                    JSONObject jsonbasecurrent=(JSONObject) jsonbase.get("current");
+                    JSONObject jsonbasecurrent = (JSONObject) jsonbase.get("current");
                     String wedescr = ((JSONObject) ((JSONArray) jsonbasecurrent.get("weather")).get(0)).getString("description");
                     System.out.println(wedescr);
                     int curdegK = ((JSONObject) jsonbase.get("current")).getInt("temp");
@@ -148,12 +181,93 @@ public class MainActivity extends AppCompatActivity {
                     textdegree.setText(String.valueOf(curdeg));
                     textsky.setText(wedescr); //выводим  JSON-массив в текстовое поле
                     unregisterReceiver(receivercurrent);
+                } else if (intent.getStringExtra(Geoservice.PERMISSION).compareTo("bymygeopos") == 0) {
+                    System.out.println("070707070" + intent.getStringExtra(Geoservice.INFOCurrent));
+                    String intentstring = intent.getStringExtra(Geoservice.INFOCurrent);
+                    JSONObject jsonweathercurrent = new JSONObject(intentstring);
+                    JSONObject jsonbase = (JSONObject) jsonweathercurrent.get("gis");
+
+                    int curdegK = ((JSONObject) jsonbase.get("current")).getInt("temp");
+                    String strlon = jsonbase.getString("lon");
+                    String strlat = jsonbase.getString("lat");
+                    int curdeg = curdegK - 273;
+                    String degree = curdeg + "";
+                    myGeoPosition = new MyGeoPosition();
+                    myGeoPosition.setMygeopos("mygeopos".hashCode());
+                    System.out.println(strlat + "///" + strlon);
+                    myGeoPosition.setLon(strlon);
+                    myGeoPosition.setLat(strlat);
+                    myGeoPosition.setDegree(degree);
+                    myGeoPosition.setLastjson(intent.getStringExtra(Geoservice.INFOCurrent));
+
+                    Executors.newSingleThreadExecutor().execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (intent.getStringExtra("ACTION").compareTo("new") == 0) {
+                                myGeoPositionDao.insert(myGeoPosition);
+
+                            } else {
+                                myGeoPositionDao.update(myGeoPosition);
+                            }
+                        }
+                    });
+                    unregisterReceiver(receivercurrent);
+                    registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
+                    Intent intentonmain = new Intent(getApplication(), Geoservice.class);
+                    intentonmain.putExtra("lon",strlon);
+                    intentonmain.putExtra("lat",strlat);
+                    intentonmain.putExtra(Geoservice.PERMISSION,"lonlat");
+                    stopService(intentonmain);
+                    startService(intentonmain);
+
                 }
-            } catch (JSONException e) {
+            }catch (JSONException e) {
                 e.getStackTrace();
                 Toast.makeText(MainActivity.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
             }
 
+        }
+    };
+    protected BroadcastReceiver receiverGeoPosition = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getStringExtra(MyGeoPositisionService.PERMISSION).compareTo("mygeopos")==0 || intent.getStringExtra(MyGeoPositisionService.PERMISSION).compareTo("mygeoposNEW")==0) {
+                System.out.println("MYGEOPOSITIONSERVICE"+intent.getStringExtra(MyGeoPositisionService.INFOMYGEOPOSOTION));
+                try {
+                    String intentstring = intent.getStringExtra(MyGeoPositisionService.INFOMYGEOPOSOTION);
+                    JSONObject jsonpositioninfo = new JSONObject(intentstring);
+                    JSONObject jsonbase = (JSONObject) jsonpositioninfo.get("geoinfo");
+                    String LocationGPS = jsonbase.getString("LocationGPS");
+                    String LocationNet = jsonbase.getString("LocationNet");
+                    String EnabledGPS = jsonbase.getString("EnabledGPS");
+                    String EnabledNet = jsonbase.getString("EnabledNet");
+                    String strlon="";
+                    String strlat="";
+                    System.out.println(LocationGPS);
+                    if(LocationGPS.compareTo("")==0){
+                        strlon=LocationNet.split("/")[1];
+                        strlat=LocationNet.split("/")[0];
+                    }else{
+                        strlon=LocationGPS.split("/")[1];
+                        strlat=LocationGPS.split("/")[0];
+                    }
+                    registerReceiver(receivercurrent,new IntentFilter(Geoservice.CHANNEL));
+                    Intent intentgeo = new Intent(getApplication(), Geoservice.class);
+                    intentgeo.putExtra(MyGeoPositisionService.PERMISSION,"bymygeopos");
+                    if(intent.getStringExtra(MyGeoPositisionService.PERMISSION).compareTo("mygeopos")==0){
+                        intentgeo.putExtra("ACTION","update");
+                    }else if(intent.getStringExtra(MyGeoPositisionService.PERMISSION).compareTo("mygeoposNEW")==0){
+                        intentgeo.putExtra("ACTION","new");
+                    }
+                    intentgeo.putExtra("lon",strlon);
+                    intentgeo.putExtra("lat",strlat);
+                    startService(intentgeo);
+                    unregisterReceiver(receiverGeoPosition);
+                } catch (JSONException e) {
+                    e.getStackTrace();
+                    Toast.makeText(MainActivity.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
+                }
+            }
         }
     };
 
@@ -182,7 +296,47 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(grantResults[0]==PackageManager.PERMISSION_GRANTED && grantResults[1]==PackageManager.PERMISSION_GRANTED){
-            System.out.println("OUUU YEAR");
+            textsity.setText("Погода вокруг");
+            Executors.newSingleThreadExecutor().execute(new Runnable() {
+                @Override
+                public void run() {
+                    if (myGeoPositionDao.getmygeopos(("mygeopos").hashCode()) == null) {
+                        registerReceiver(receiverGeoPosition, new IntentFilter(MyGeoPositisionService.CHANNEL));
+                        Intent intentmygeopos = new Intent(MainActivity.this, MyGeoPositisionService.class);
+                        intentmygeopos.putExtra(MyGeoPositisionService.PERMISSION, "mygeoposNEW");
+                        startService(intentmygeopos);
+                    } else {
+                    /*
+                    myGeoPosAdapter = new MyGeoPosAdapter(ViewSearch.this, myGeoPositionDao.getmygeopos("mygeopos".hashCode()));
+                    mygeoposlist.setAdapter(myGeoPosAdapter);
+                    */
+                        registerReceiver(receiverGeoPosition, new IntentFilter(MyGeoPositisionService.CHANNEL));
+                        Intent intentmygeopos = new Intent(MainActivity.this, MyGeoPositisionService.class);
+                        intentmygeopos.putExtra(MyGeoPositisionService.PERMISSION, "mygeopos");
+                        startService(intentmygeopos);
+                    }
+                }
+            });
+        }else{
+
         }
+    }
+    public void UpdateMain(){
+        try {
+            JSONObject jsonObject = new JSONObject(myGeoPositionDao.getmygeopos("mygeopos".hashCode()).getLastjson());
+            JSONObject jsonbase = (JSONObject) jsonObject.get("gis");
+            System.out.println("WE ARE HERE");
+            JSONObject jsonbasecurrent = (JSONObject) jsonbase.get("current");
+            String wedescr = ((JSONObject) ((JSONArray) jsonbasecurrent.get("weather")).get(0)).getString("description");
+            System.out.println(wedescr);
+            int curdegK = ((JSONObject) jsonbase.get("current")).getInt("temp");
+            int curdeg = curdegK - 273;
+            System.out.println(curdeg);
+            textdegree.setText(String.valueOf(curdeg));
+            textsky.setText(wedescr);
+        }catch(JSONException e){
+
+        }
+
     }
 }

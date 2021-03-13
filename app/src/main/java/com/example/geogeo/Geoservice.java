@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -15,7 +18,9 @@ public class Geoservice extends Service{
     public static final String CHANNEL= "GEO";
     public static final String INFOCurrent = "INFOCurrent";
     public static final String PERMISSION = "PERMISSION";
+    public static final String GOODCOORD = "GOODCOORD";
     private String Action;
+
     @Override
     public void onCreate() {
         Toast.makeText(getApplication(),"ServiceCreated",Toast.LENGTH_LONG);
@@ -27,6 +32,7 @@ public class Geoservice extends Service{
         AnotherThread anotherThread;
         AnotherThreadlonlat anotherThreadlonlat;
         AnotherThreadbymygeopos anotherThreadbymygeopos;
+        AnotherThreadupdateadded anotherThreadupdateadded;
         try {
             String permission = intent.getStringExtra(PERMISSION);
             if(permission.compareTo("city")==0){
@@ -36,7 +42,8 @@ public class Geoservice extends Service{
             }else if(permission.compareTo("lonlat")==0){
                 String lon=intent.getStringExtra("lon");
                 String lat=intent.getStringExtra("lat");
-                anotherThreadlonlat = new AnotherThreadlonlat(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"));
+                System.out.println(lon+" "+lat);
+                anotherThreadlonlat = new AnotherThreadlonlat(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"),lon,lat);
                 anotherThreadlonlat.start();
             }else if(permission.compareTo("bymygeopos")==0){
                 Action = intent.getStringExtra("ACTION");
@@ -44,6 +51,12 @@ public class Geoservice extends Service{
                 String lat=intent.getStringExtra("lat");
                 anotherThreadbymygeopos = new AnotherThreadbymygeopos(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"));
                 anotherThreadbymygeopos.start();
+            }else if(permission.compareTo("updateadded")==0){
+                String lon=intent.getStringExtra("lon");
+                String lat=intent.getStringExtra("lat");
+                System.out.println(lon+" "+lat);
+                anotherThreadupdateadded = new AnotherThreadupdateadded(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"),lon,lat);
+                anotherThreadupdateadded.start();
             }
         }catch(IOException e){
             e.getStackTrace();
@@ -73,6 +86,7 @@ public class Geoservice extends Service{
                     Scanner inputstream = new Scanner((InputStream) url.getContent());
                     result="{\"gis\":" +inputstream.nextLine()+"}";
                     System.out.println(result);
+                    inputstream.close();
                 }catch(IOException eio){
                     result= eio.toString();
                 }
@@ -86,8 +100,12 @@ public class Geoservice extends Service{
     }
     public class AnotherThreadlonlat extends Thread{
         URL url;
-        AnotherThreadlonlat(URL url){
+        String lon;
+        String lat;
+        AnotherThreadlonlat(URL url,String lon,String lat){
             this.url=url;
+            this.lon=lon;
+            this.lat=lat;
         }
         @Override
         public void run() {
@@ -95,13 +113,17 @@ public class Geoservice extends Service{
                 String result;
                 try{
                     Scanner inputstream = new Scanner((InputStream) url.getContent());
+                    System.out.println(url);
                     result="{\"gis\":" +inputstream.nextLine()+"}";
                     System.out.println("2222"+result);
+                    inputstream.close();
                 }catch(IOException eio){
                     result= eio.toString();
                 }
                 Intent intent=new Intent(CHANNEL);
                 intent.putExtra(INFOCurrent,result);
+                System.out.println(lon+" "+lat);
+                intent.putExtra(GOODCOORD,lon+"/"+lat);
                 intent.putExtra(PERMISSION,"lonlat");
                 sendBroadcast(intent);
             }
@@ -121,6 +143,7 @@ public class Geoservice extends Service{
                     Scanner inputstream = new Scanner((InputStream) url.getContent());
                     result="{\"gis\":" +inputstream.nextLine()+"}";
                     System.out.println("3333"+result);
+                    inputstream.close();
                 }catch(IOException eio){
                     result= eio.toString();
                 }
@@ -129,6 +152,38 @@ public class Geoservice extends Service{
                 intent.putExtra(PERMISSION,"bymygeopos");
                 intent.putExtra("ACTION",Action);
                 System.out.println("SEND");
+                sendBroadcast(intent);
+            }
+
+        }
+    }
+    public class AnotherThreadupdateadded extends Thread{
+        URL url;
+        String lon;
+        String lat;
+        AnotherThreadupdateadded(URL url,String lon,String lat){
+            this.url=url;
+            this.lon=lon;
+            this.lat=lat;
+        }
+        @Override
+        public void run() {
+            synchronized (url) {
+                String result;
+                try{
+                    Scanner inputstream = new Scanner((InputStream) url.getContent());
+                    System.out.println(url);
+                    result="{\"gis\":" +inputstream.nextLine()+"}";
+                    System.out.println("4444"+result);
+                    inputstream.close();
+                }catch(IOException eio){
+                    result= eio.toString();
+                }
+                Intent intent=new Intent(CHANNEL);
+                intent.putExtra(INFOCurrent,result);
+                System.out.println(lon+" "+lat);
+                intent.putExtra(GOODCOORD,lon+"/"+lat);
+                intent.putExtra(PERMISSION,"updateadded");
                 sendBroadcast(intent);
             }
 

@@ -52,7 +52,7 @@ public class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.ViewHolder
         if(TorF){
             holder.Add.setBackground(ContextCompat.getDrawable(holder.itemView.getRootView().getContext(),R.drawable.nullbackground));
         }
-        holder.Add.setTag("{\"coord\":"+"{\"idtag\":\""+(staticTag)+"\",\"name\":\""+city.getNameCity()+"\",\"country\":\""+city.getNameCountry()+"\",\"lon\":\""+city.getLongitude()+"\",\"lat\":\""+city.getLatitude()+"\"}}");
+        holder.Add.setTag("{\"coord\":"+"{\"idtag\":\""+idcity+"\",\"name\":\""+city.getNameCity()+"\",\"country\":\""+city.getNameCountry()+"\",\"lon\":\""+city.getLongitude()+"\",\"lat\":\""+city.getLatitude()+"\"}}");
     }
 
 

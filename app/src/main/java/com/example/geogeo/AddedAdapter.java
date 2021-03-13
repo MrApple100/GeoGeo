@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
@@ -27,6 +28,7 @@ public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
     private  static boolean timeforselect=false;
     private ArrayList<Boolean> checkarrayvis=new ArrayList<Boolean>();
     private ArrayList<Boolean> checkarraycheck=new ArrayList<Boolean>();
+    static ArrayList<String> ids=new ArrayList<>();
 
 
     AddedAdapter(Context context, List<AddedCity> cities) {
@@ -37,6 +39,7 @@ public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
         for(int i=0;i<cities.size();i++){
             checkarrayvis.add(false);
             checkarraycheck.add(false);
+            ids.add("");
         }
     }
 
@@ -59,7 +62,8 @@ public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
     @Override
     public AddedAdapter.ViewHolder onCreateViewHolder( ViewGroup parent, int viewType) {
         View view = inflater.inflate(R.layout.oneaddedcityelement, parent, false) ;
-        //view.setTag(staticTag);
+        view.setTag(staticTag);
+        staticTag++;
         view.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -94,6 +98,8 @@ public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
         holder.Longitude.setText("Долгота :"+city.getLon());
         holder.Latitude.setText("Широта :"+city.getLat());
         holder.Degree.setText(city.getDegree());
+        holder.itemView.setTag((city.getLon()+city.getLat()));
+        ids.set(holder.getLayoutPosition(),city.getLon()+city.getLat());
         if(checkarrayvis.get(position)){
             holder.checkBox.setVisibility(View.VISIBLE);
         }else{
@@ -104,7 +110,7 @@ public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
         }else{
             holder.checkBox.setChecked(false);
         }
-        holder.checkBox.setTag("{\"coord\":"+"{\"idtag\":\""+city.getId()+"\",\"name\":\""+city.getNameCity()+"\",\"country\":\""+city.getCountry()+"\",\"lon\":\""+city.getLon()+"\",\"lat\":\""+city.getLat()+"\"}}");
+        holder.checkBox.setTag("{\"coord\":"+"{\"idtag\":\""+(city.getLon()+city.getLat()).hashCode()+"\",\"name\":\""+city.getNameCity()+"\",\"country\":\""+city.getCountry()+"\",\"lon\":\""+city.getLon()+"\",\"lat\":\""+city.getLat()+"\"}}");
         //меняю цвет в зависимости от темп
         if(Integer.parseInt(holder.Degree.getText()+"")>4){
             if(Integer.parseInt(holder.Degree.getText()+"")>15){

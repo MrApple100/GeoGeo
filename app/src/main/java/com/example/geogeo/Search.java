@@ -148,6 +148,7 @@ public class Search extends Service{
                     Scanner inputstream = new Scanner((InputStream) url.getContent());
                     result = "{\"gis\":" + inputstream.nextLine() + "}";
                     System.out.println(result);
+                    inputstream.close();
                 }catch(IOException eio){
                     result= eio.toString();
                 }
