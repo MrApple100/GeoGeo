@@ -150,7 +150,10 @@ public class ViewSearch extends AppCompatActivity {
                     stopService(intentsearch);
                     startService(intentsearch);
                 } else {
-                    mygeoposlist.setVisibility(View.VISIBLE);
+                    if (ContextCompat.checkSelfPermission(ViewSearch.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                            && ContextCompat.checkSelfPermission(ViewSearch.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        mygeoposlist.setVisibility(View.VISIBLE);
+                    }
                     searchcitylist.setVisibility(View.VISIBLE);
                     kolchanges = 0;
                     textnotfound.setText("");
@@ -158,8 +161,11 @@ public class ViewSearch extends AppCompatActivity {
                         @Override
                         public void handleMessage(@NonNull Message msg) {
                             super.handleMessage(msg);
-                            searchcitylist.setAdapter(addedAdapter);
-                            mygeoposlist.setAdapter(myGeoPosAdapter);
+                            if (ContextCompat.checkSelfPermission(ViewSearch.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                                    && ContextCompat.checkSelfPermission(ViewSearch.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                mygeoposlist.setAdapter(myGeoPosAdapter);
+                            }
+                                searchcitylist.setAdapter(addedAdapter);
                         }
                     };
                     Executors.newSingleThreadExecutor().execute(new Runnable() {
@@ -167,7 +173,11 @@ public class ViewSearch extends AppCompatActivity {
                         public void run() {
                             System.out.println("ADDDD" + addedCityDao.getAll());
                             addedAdapter = new AddedAdapter(ViewSearch.this, addedCityDao.getAll());
-                            myGeoPosAdapter = new MyGeoPosAdapter(ViewSearch.this, myGeoPositionDao.getmygeopos("mygeopos".hashCode()));
+                            if (ContextCompat.checkSelfPermission(ViewSearch.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                                    && ContextCompat.checkSelfPermission(ViewSearch.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                myGeoPosAdapter = new MyGeoPosAdapter(ViewSearch.this, myGeoPositionDao.getmygeopos("mygeopos".hashCode()));
+
+                            }
                             handler.sendEmptyMessage(1);
                         }
                     });
@@ -450,7 +460,8 @@ public class ViewSearch extends AppCompatActivity {
                     //unregisterReceiver(receivercurrentSearch);
                 } catch (JSONException e) {
                     e.getStackTrace();
-                    Toast.makeText(ViewSearch.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
+                    Toast.makeText(ViewSearch.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
+
                 }
             }else{
                 //обновление моей позиции
@@ -515,7 +526,8 @@ public class ViewSearch extends AppCompatActivity {
                         unregisterReceiver(receivercurrentSearch);
                     } catch (JSONException e) {
                         e.getStackTrace();
-                        Toast.makeText(ViewSearch.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
+                        Toast.makeText(ViewSearch.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
+
                     }
                 }else
                     //обновление addedlist
@@ -556,7 +568,8 @@ public class ViewSearch extends AppCompatActivity {
                        //unregisterReceiver(receivercurrentSearch);
                     } catch (JSONException e) {
                         e.getStackTrace();
-                        Toast.makeText(ViewSearch.this, "Wrong JSON format UPDATEADDED", Toast.LENGTH_LONG).show();
+                        Toast.makeText(ViewSearch.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
+
                     }
                 }
             }
@@ -598,7 +611,7 @@ public class ViewSearch extends AppCompatActivity {
                     unregisterReceiver(receiverGeoPosition);
                 } catch (JSONException e) {
                     e.getStackTrace();
-                    Toast.makeText(ViewSearch.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
+                    Toast.makeText(ViewSearch.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
                 }
             }
         }

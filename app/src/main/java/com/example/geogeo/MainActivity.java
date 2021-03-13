@@ -141,14 +141,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         //запрос отправляется раньше основного запроса, поэтому его не видно
-        /*if((textsity.getText().toString()).compareTo("")!=0){
+        if((textsity.getText().toString()).compareTo("")!=0){
             registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
             String city =textsity.getText()+"";
             Intent intent = new Intent(getApplication(), Geoservice.class);
             intent.putExtra("city",city);
             intent.putExtra(Geoservice.PERMISSION,"city");
             startService(intent);
-        }*/
+        }
     }
 
     @Override
@@ -223,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }catch (JSONException e) {
                 e.getStackTrace();
-                Toast.makeText(MainActivity.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
             }
 
         }
@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity {
                     unregisterReceiver(receiverGeoPosition);
                 } catch (JSONException e) {
                     e.getStackTrace();
-                    Toast.makeText(MainActivity.this, "Wrong JSON format", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
                 }
             }
         }
@@ -295,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(grantResults[0]==PackageManager.PERMISSION_GRANTED && grantResults[1]==PackageManager.PERMISSION_GRANTED){
+        if(grantResults[0]==PackageManager.PERMISSION_GRANTED){
             textsity.setText("Погода вокруг");
             Executors.newSingleThreadExecutor().execute(new Runnable() {
                 @Override
@@ -335,7 +335,7 @@ public class MainActivity extends AppCompatActivity {
             textdegree.setText(String.valueOf(curdeg));
             textsky.setText(wedescr);
         }catch(JSONException e){
-
+                Toast.makeText(MainActivity.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
         }
 
     }
