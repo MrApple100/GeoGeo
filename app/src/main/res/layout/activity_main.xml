@@ -32,10 +32,20 @@
             android:textSize="18dp"
             android:singleLine="true">
         </TextView>
+        <Button
+            android:id="@+id/gotomaps"
+            android:layout_marginRight="25dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="@drawable/baseline_room_24"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            >
+        </Button>
 
     </RelativeLayout>
     <LinearLayout
-
+        android:id="@+id/MAINDEGREE"
         android:layout_width="match_parent"
         android:layout_height="250dp"
         android:orientation="vertical"
@@ -72,17 +82,19 @@
         </TextView>
     </LinearLayout>
     <LinearLayout
+        android:id="@+id/ANOTHERDAYS"
+        android:layout_marginTop="15dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:gravity="center">
-        <TextView
-            android:id="@+id/text1"
-            android:layout_width="200dp"
+        android:gravity="center"
+        android:layout_below="@+id/MAINDEGREE">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/dayslist"
+            android:layout_width="350dp"
             android:layout_height="wrap_content"
-            android:background="@color/white">
-
-        </TextView>
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+></androidx.recyclerview.widget.RecyclerView>
     </LinearLayout>
 
 

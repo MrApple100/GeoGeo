@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/oneaddedcity"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="70dp"
+    android:layout_marginVertical="7dp"
+    android:clickable="true"
+    android:longClickable="true"
+    android:onClick="ChooseCityfromAdded"
+
+    >
+    <LinearLayout
+        android:id="@+id/CitiInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+        <TextView
+            android:id="@+id/WhenName"
+            android:layout_width="100dp"
+            android:layout_height="30dp"
+            android:layout_marginLeft="16dp"
+            android:text="when"
+            android:textColor="@android:color/white"
+            android:textSize="20dp"></TextView>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toStartOf="@+id/linearLayout"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/CitiInfo"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/CitiInfo"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/wheather"
+            android:layout_width="160dp"
+            android:layout_height="30dp"
+            android:gravity="center_vertical"
+            android:text="weather"
+            android:textColor="@android:color/white"
+            android:textSize="10dp"></TextView>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginRight="15dp"
+        android:id="@+id/linearLayout"
+        android:layout_width="100dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintRight_toLeftOf="@id/checklayout"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/mindegree"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="@android:color/white"
+                android:textSize="30dp">
+            </TextView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:gravity="top"
+                android:text="°/"
+                android:textColor="@android:color/white"
+                android:textSize="25dp"></TextView>
+            <TextView
+                android:id="@+id/maxdegree"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="@android:color/white"
+                android:textSize="30dp">
+            </TextView>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:gravity="top"
+                android:text="°"
+                android:textColor="@android:color/white"
+                android:textSize="25dp">
+            </TextView>
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/checklayout"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_marginHorizontal="0dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+        <CheckBox
+            android:id="@+id/checkdelete"
+            android:enabled="false"
+            android:checked="false"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+        </CheckBox>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

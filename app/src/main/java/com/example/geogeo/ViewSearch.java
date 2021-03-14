@@ -374,21 +374,17 @@ public class ViewSearch extends AppCompatActivity {
                 arrayTorFadded.clear();
                 try {
                     JSONArray jsonlistcities = (JSONArray) new JSONObject(temptreadinfo).get("list");
-                    System.out.println("????????/"+jsonlistcities.length());
                     for (int i = 0; i < jsonlistcities.length(); i++) {
                         JSONObject jsonruscity = (JSONObject) jsonlistcities.get(i);
                         if(jsonruscity.has("local_names")){
                             if (((JSONObject) jsonruscity.get("local_names")).has("ru")) {
-                                System.out.println("llllk");
                                 city=((JSONObject) jsonruscity.get("local_names")).getString("ru");
 
                             }else{
-                                System.out.println("kkkkkk");
                                 city=(jsonruscity.getString("name"));
 
                             }
                         }else{
-                            System.out.println("kkkkkk");
                             city=(jsonruscity.getString("name"));
                         }
                         country=jsonruscity.getString("country");
@@ -402,7 +398,6 @@ public class ViewSearch extends AppCompatActivity {
                             }
                         }
                         cityArrayList.add(new City(city,country,longitude,latitude));
-                        System.out.println(i+"-00-"+cityArrayList.get(i).getNameCity());
                     }
 
 
@@ -526,7 +521,7 @@ public class ViewSearch extends AppCompatActivity {
                         unregisterReceiver(receivercurrentSearch);
                     } catch (JSONException e) {
                         e.getStackTrace();
-                        Toast.makeText(ViewSearch.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
+                       // Toast.makeText(ViewSearch.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
 
                     }
                 }else

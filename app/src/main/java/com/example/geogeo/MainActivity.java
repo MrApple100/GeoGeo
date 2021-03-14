@@ -22,6 +22,7 @@ import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.TransitionDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -51,6 +52,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Time;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.Executors;
 
 
@@ -60,9 +63,14 @@ public class MainActivity extends AppCompatActivity {
     TextView textsky;
     TextView textsity;
     TextView Maintext;
+    RecyclerView dayslist;
+    DayAdapter dayAdapter;
+    String lonlat;
     int TAG_CODE_PERMISSION_LOCATION= 1;
     private MyGeoPositionDao myGeoPositionDao;
     private AppDataMyPos datamypos;
+    private AppDataDay dataDay;
+    private DayDao dayDao;
     private MyGeoPosition myGeoPosition;
 
     @Override
@@ -74,10 +82,13 @@ public class MainActivity extends AppCompatActivity {
         textsky = (TextView) findViewById(R.id.sky);
         textsity = (TextView) findViewById(R.id.sity);
         Button search=(Button) findViewById(R.id.search_go_btn);
-        Maintext=(TextView) findViewById(R.id.text1);
+        Button gotomaps=(Button) findViewById(R.id.gotomaps);
+        dayslist=(RecyclerView) findViewById(R.id.dayslist);
 
         datamypos = (AppDataMyPos) AppDataMyPos.getInstance(this, "datamygeo").addMigrations(ViewSearch.MIGRATIONmygeopos1_2,ViewSearch.MIGRATIONmygeopos2_3).allowMainThreadQueries().build();
         myGeoPositionDao = datamypos.myGeoPositionDao();
+        dataDay = (AppDataDay) AppDataDay.getInstance(this,"dataday").build();
+        dayDao = dataDay.dayDao();
 
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         && ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION)== PackageManager.PERMISSION_GRANTED){
@@ -112,6 +123,22 @@ public class MainActivity extends AppCompatActivity {
             startService(intent);
             ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},TAG_CODE_PERMISSION_LOCATION);
         }
+        Handler handler = new Handler() {
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                super.handleMessage(msg);
+                dayslist.setAdapter(dayAdapter);
+            }
+        };
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
+            @Override
+            public void run() {
+                if(dayDao.getAll()!=null) {
+                    dayAdapter = new DayAdapter(MainActivity.this, dayDao.getAll());
+                    handler.sendEmptyMessage(1);
+                }
+            }
+        });
 
         search.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -121,6 +148,15 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println("kkkkkkkkkkkkkkkkkkkkkkkkkkk"+intent);
                 startActivityForResult(intent,1);
                 overridePendingTransition(R.anim.newfromright,R.anim.oldtoright);
+            }
+        });
+        gotomaps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(Intent.ACTION_VIEW,Uri.parse("geo:"+lonlat+"?zoom:15"));
+                if(intent.resolveActivity(getPackageManager()) != null){
+                    startActivity(intent);
+                }
             }
         });
     }
@@ -171,22 +207,52 @@ public class MainActivity extends AppCompatActivity {
                     String intentstring = intent.getStringExtra(Geoservice.INFOCurrent);
                     JSONObject jsonweathercurrent = new JSONObject(intentstring);
                     JSONObject jsonbase = (JSONObject) jsonweathercurrent.get("gis");
-                    System.out.println("WE ARE HERE");
                     JSONObject jsonbasecurrent = (JSONObject) jsonbase.get("current");
                     String wedescr = ((JSONObject) ((JSONArray) jsonbasecurrent.get("weather")).get(0)).getString("description");
-                    System.out.println(wedescr);
+                    JSONArray jsondays=(JSONArray) jsonbase.get("daily");
                     int curdegK = ((JSONObject) jsonbase.get("current")).getInt("temp");
                     int curdeg = curdegK - 273;
-                    System.out.println(curdeg);
+                    lonlat=intent.getStringExtra(Geoservice.GOODCOORD).split("/")[1]+","+intent.getStringExtra(Geoservice.GOODCOORD).split("/")[0];
                     textdegree.setText(String.valueOf(curdeg));
                     textsky.setText(wedescr); //выводим  JSON-массив в текстовое поле
+                    String currentdt= jsonbasecurrent.getString("dt");
+                    for(int i=0;i<jsondays.length();i++){
+                        int tempi=i;
+                        String date=((JSONObject)jsondays.get(i)).getString("dt");
+                        int mindegree=((JSONObject)((JSONObject) jsondays.get(i)).get("temp")).getInt("min")-273;
+                        int maxdegree=((JSONObject)((JSONObject) jsondays.get(i)).get("temp")).getInt("max")-273;
+                        String weather=((JSONObject)((JSONArray)((JSONObject) jsondays.get(i)).get("weather")).get(0)).getString("description");
+                        Day day=new Day(i,date,weather,mindegree+"",maxdegree+"");
+                        System.out.println(date);
+                        Handler handler = new Handler() {
+                            @Override
+                            public void handleMessage(@NonNull Message msg) {
+                                super.handleMessage(msg);
+                                dayslist.setAdapter(dayAdapter);
+
+                            }
+                        };
+                        Executors.newSingleThreadExecutor().execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                if(dayDao.getByid(day.position)==null){
+                                    dayDao.insert(day);
+
+                                    dayAdapter=new DayAdapter(MainActivity.this,dayDao.getAll());
+                                    handler.sendEmptyMessage(1);
+                                }else{
+                                    dayDao.update(day);
+                                    dayAdapter=new DayAdapter(MainActivity.this,dayDao.getAll());
+                                    handler.sendEmptyMessage(1);
+                                }
+                            }
+                        });
+                    }
                     unregisterReceiver(receivercurrent);
                 } else if (intent.getStringExtra(Geoservice.PERMISSION).compareTo("bymygeopos") == 0) {
-                    System.out.println("070707070" + intent.getStringExtra(Geoservice.INFOCurrent));
                     String intentstring = intent.getStringExtra(Geoservice.INFOCurrent);
                     JSONObject jsonweathercurrent = new JSONObject(intentstring);
                     JSONObject jsonbase = (JSONObject) jsonweathercurrent.get("gis");
-
                     int curdegK = ((JSONObject) jsonbase.get("current")).getInt("temp");
                     String strlon = jsonbase.getString("lon");
                     String strlat = jsonbase.getString("lat");
@@ -194,7 +260,6 @@ public class MainActivity extends AppCompatActivity {
                     String degree = curdeg + "";
                     myGeoPosition = new MyGeoPosition();
                     myGeoPosition.setMygeopos("mygeopos".hashCode());
-                    System.out.println(strlat + "///" + strlon);
                     myGeoPosition.setLon(strlon);
                     myGeoPosition.setLat(strlat);
                     myGeoPosition.setDegree(degree);
@@ -223,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }catch (JSONException e) {
                 e.getStackTrace();
-                Toast.makeText(MainActivity.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this,"Проверьте связь с интернетом!",Toast.LENGTH_LONG).show();
             }
 
         }

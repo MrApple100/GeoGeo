@@ -43,19 +43,19 @@ public class Geoservice extends Service{
                 String lon=intent.getStringExtra("lon");
                 String lat=intent.getStringExtra("lat");
                 System.out.println(lon+" "+lat);
-                anotherThreadlonlat = new AnotherThreadlonlat(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"),lon,lat);
+                anotherThreadlonlat = new AnotherThreadlonlat(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&exclude=minutely,hourly&lang=ru&appid=11380ed4b5872057ec582d1289415365"),lon,lat);
                 anotherThreadlonlat.start();
             }else if(permission.compareTo("bymygeopos")==0){
                 Action = intent.getStringExtra("ACTION");
                 String lon=intent.getStringExtra("lon");
                 String lat=intent.getStringExtra("lat");
-                anotherThreadbymygeopos = new AnotherThreadbymygeopos(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"));
+                anotherThreadbymygeopos = new AnotherThreadbymygeopos(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&exclude=minutely,hourly&lang=ru&appid=11380ed4b5872057ec582d1289415365"));
                 anotherThreadbymygeopos.start();
             }else if(permission.compareTo("updateadded")==0){
                 String lon=intent.getStringExtra("lon");
                 String lat=intent.getStringExtra("lat");
                 System.out.println(lon+" "+lat);
-                anotherThreadupdateadded = new AnotherThreadupdateadded(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&lang=ru&appid=11380ed4b5872057ec582d1289415365"),lon,lat);
+                anotherThreadupdateadded = new AnotherThreadupdateadded(new URL("https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&exclude=minutely,hourly&lang=ru&appid=11380ed4b5872057ec582d1289415365"),lon,lat);
                 anotherThreadupdateadded.start();
             }
         }catch(IOException e){
