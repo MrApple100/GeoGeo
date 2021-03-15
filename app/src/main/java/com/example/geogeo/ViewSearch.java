@@ -1,14 +1,12 @@
 package com.example.geogeo;
 
 import android.Manifest;
-import android.app.ActivityManager;
-import android.app.Application;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.database.Observable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -16,7 +14,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -26,12 +23,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.loader.content.AsyncTaskLoader;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Database;
-import androidx.room.Room;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
@@ -41,9 +34,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class ViewSearch extends AppCompatActivity {
@@ -69,9 +59,6 @@ public class ViewSearch extends AppCompatActivity {
     Intent intentsearch;
     Intent intentgeo;
 
-    public AppDataBase getDataBase() {
-        return dataBase;
-    }
     public static final Migration MIGRATION1_2 = new Migration(1,2) {
         @Override
         public void migrate(final SupportSQLiteDatabase database) {
@@ -94,7 +81,6 @@ public class ViewSearch extends AppCompatActivity {
     @Override
     protected void onCreate( Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        System.out.println("CREEEEEAAT");
 
 
         dataBase = (AppDataBase) AppDataBase.getInstance(this, "database").addMigrations(MIGRATION1_2).allowMainThreadQueries().build();
@@ -112,6 +98,7 @@ public class ViewSearch extends AppCompatActivity {
         intentgeo = new Intent(ViewSearch.this, Geoservice.class);
 
         kolchanges = 0;
+        //обработка ввода текста в строке поиска
         TextWatcher textWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -135,7 +122,7 @@ public class ViewSearch extends AppCompatActivity {
                         Button button = (Button) findViewById(R.id.exit);
                         button.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.baseline_keyboard_arrow_left_20));
                     }
-
+                    //поиск по введенному слову
                     kolchanges++;
                     String stringofword = String.valueOf(s);
                     System.out.println("++++++++++" + stringofword);
@@ -150,6 +137,7 @@ public class ViewSearch extends AppCompatActivity {
                     stopService(intentsearch);
                     startService(intentsearch);
                 } else {
+                    //если поле ввода пустое, то выводим добавленные города и местоположение если есть разрешение
                     if (ContextCompat.checkSelfPermission(ViewSearch.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                             && ContextCompat.checkSelfPermission(ViewSearch.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                         mygeoposlist.setVisibility(View.VISIBLE);
@@ -171,7 +159,6 @@ public class ViewSearch extends AppCompatActivity {
                     Executors.newSingleThreadExecutor().execute(new Runnable() {
                         @Override
                         public void run() {
-                            System.out.println("ADDDD" + addedCityDao.getAll());
                             addedAdapter = new AddedAdapter(ViewSearch.this, addedCityDao.getAll());
                             if (ContextCompat.checkSelfPermission(ViewSearch.this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                                     && ContextCompat.checkSelfPermission(ViewSearch.this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -191,6 +178,7 @@ public class ViewSearch extends AppCompatActivity {
             }
         };
         editsity.addTextChangedListener(textWatcher);
+        //обработка выхода из состояние удаления при касании поля ввода
         editsity.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -216,9 +204,9 @@ public class ViewSearch extends AppCompatActivity {
         if(addedCityDao.getAll()!=null){
             addedAdapter = new AddedAdapter(ViewSearch.this, addedCityDao.getAll());
             searchcitylist.setAdapter(addedAdapter);
+            registerReceiver(receivercurrentSearch, new IntentFilter(Geoservice.CHANNEL));
             for(int i=0;i<addedCityDao.getAll().size();i++) {
                 AddedCity addedCity = addedCityDao.getAll().get(i);
-                registerReceiver(receivercurrentSearch, new IntentFilter(Geoservice.CHANNEL));
                 Intent intent = new Intent(ViewSearch.this, Geoservice.class);
                 intent.putExtra("lon", addedCity.lon);
                 intent.putExtra("lat",addedCity.lat);
@@ -228,7 +216,7 @@ public class ViewSearch extends AppCompatActivity {
 
 
         }
-        //проверка на то, есть ли разрешение
+        //проверка на то, есть ли разрешение. Если есть, то закачивается инфа о местонахождении
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Executors.newSingleThreadExecutor().execute(new Runnable() {
@@ -261,6 +249,7 @@ public class ViewSearch extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        //для обновления экрана при перезапуске
         kolchanges=0;
         if(String.valueOf(editsity.getText()).compareTo("")==0) {
             textnotfound.setText("");
@@ -276,14 +265,23 @@ public class ViewSearch extends AppCompatActivity {
             Executors.newSingleThreadExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
-                    System.out.println("ADDDD" + addedCityDao.getAll());
                     addedAdapter = new AddedAdapter(ViewSearch.this, addedCityDao.getAll());
                     handler.sendEmptyMessage(1);
                 }
             });
+            if(!dataBase.isOpen()) {
+                dataBase = (AppDataBase) AppDataBase.getInstance(this, "database").addMigrations(MIGRATION1_2).allowMainThreadQueries().build();
+                addedCityDao = dataBase.addedCityDao();
+            }
+            if(!datamypos.isOpen()) {
+                datamypos = (AppDataMyPos) AppDataMyPos.getInstance(this, "datamygeo").addMigrations(MIGRATIONmygeopos1_2, MIGRATIONmygeopos2_3).allowMainThreadQueries().build();
+                myGeoPositionDao = datamypos.myGeoPositionDao();
+
+            }
         }
+
     }
-//проверить позже
+//для перезагрузки данных при поиске
     @Override
     protected void onRestart() {
         super.onRestart();
@@ -311,10 +309,11 @@ public class ViewSearch extends AppCompatActivity {
         Intent intentsearch = new Intent(this, Search.class);
         stopService(intentsearch);
         System.out.println("DESTRROOOY");
-        //удаляем лишний получатель
+        //удаляем лишний получатель если есть
         if(receivercurrentSearch.isOrderedBroadcast()){
             unregisterReceiver(receivercurrentSearch);
         }
+        // выход из состояния удаления добавленных городов
         if(AddedAdapter.getTimeforSelect()){
             AddedAdapter.setTimeforselect(false);
             LinearLayout linearLayout=(LinearLayout) findViewById(R.id.celldeleteadded);
@@ -338,12 +337,11 @@ public class ViewSearch extends AppCompatActivity {
         stopService(intentweather);
         Intent intentsearch = new Intent(this, Search.class);
         stopService(intentsearch);
-        System.out.println("DESTRROOOY");
         //удаляем лишний получатель
         if(receivercurrentSearch.isOrderedBroadcast()){
             unregisterReceiver(receivercurrentSearch);
         }
-        //возвращаем в стандартное состояние addedarray
+        //возвращаем в стандартное состояние addedarray. Вызодим из сосотяния удаления
         if(AddedAdapter.getTimeforSelect()){
             AddedAdapter.setTimeforselect(false);
             LinearLayout linearLayout=(LinearLayout) findViewById(R.id.celldeleteadded);
@@ -357,9 +355,12 @@ public class ViewSearch extends AppCompatActivity {
             Button button=(Button) findViewById(R.id.exit);
             button.setBackground(ContextCompat.getDrawable(getApplicationContext(),R.drawable.baseline_keyboard_arrow_left_20));
         }
-
-
+        //закрываем бд
+        System.out.println("DESTROY");
+        //dataBase.close();
+        //datamypos.close();
     }
+    //получатель работы с сервисом поиска по введеному слову. Search
     protected BroadcastReceiver receiverlistofcities = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -402,11 +403,11 @@ public class ViewSearch extends AppCompatActivity {
 
 
                 } catch (JSONException json) {
-
+                    Toast.makeText(ViewSearch.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
                 }
 
                 textnotfound.setText("");
-
+                //отправляю запрос для уточнения информации о городе
                 for(int i=0;i<cityArrayList.size();i++){
                     registerReceiver(receivercurrentSearch, new IntentFilter(Geoservice.CHANNEL));
                     intentgeo.putExtra("lon", cityArrayList.get(i).getLongitude());
@@ -432,13 +433,15 @@ public class ViewSearch extends AppCompatActivity {
 
         }
     };
+    //получатель работает с сервисом Geoservice
+    //lonlat разрешение работает с выдачей degree
+    //bymygeopos разрешение работает с местонахожднием
+    //updateadded разрешение обновляет список добавленных городов
     protected BroadcastReceiver receivercurrentSearch = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            System.out.println("-----1111111-------");
             //получаем у каждого из списка degree
             if(intent.getStringExtra(Geoservice.PERMISSION).compareTo("lonlat")==0) {
-                System.out.println("0909090"+intent.getStringExtra(Geoservice.INFOCurrent));
                 try {
                     String intentstring = intent.getStringExtra(Geoservice.INFOCurrent);
                     JSONObject jsonweathercurrent = new JSONObject(intentstring);
@@ -449,9 +452,7 @@ public class ViewSearch extends AppCompatActivity {
                     String strlat=intent.getStringExtra(Geoservice.GOODCOORD).split("/")[1];
                     int curdeg = curdegK - 273;
                     String degree = curdeg + "";
-                    System.out.println("DEGREE"+degree+"//"+strlon+"/\\"+strlat);
                     hashmapdegree.put((strlon+strlat).hashCode(),degree);
-                    System.out.println((strlon+strlat).hashCode());
                     //unregisterReceiver(receivercurrentSearch);
                 } catch (JSONException e) {
                     e.getStackTrace();
@@ -461,7 +462,6 @@ public class ViewSearch extends AppCompatActivity {
             }else{
                 //обновление моей позиции
                 if(intent.getStringExtra(Geoservice.PERMISSION).compareTo("bymygeopos")==0){
-                    System.out.println("070707070"+intent.getStringExtra(Geoservice.INFOCurrent));
                     try {
                         String intentstring = intent.getStringExtra(Geoservice.INFOCurrent);
                         JSONObject jsonweathercurrent = new JSONObject(intentstring);
@@ -474,7 +474,6 @@ public class ViewSearch extends AppCompatActivity {
                         String degree = curdeg + "";
                         myGeoPosition =new MyGeoPosition();
                         myGeoPosition.setMygeopos("mygeopos".hashCode());
-                        System.out.println(strlat+"///"+strlon);
                         myGeoPosition.setLon(strlon);
                         myGeoPosition.setLat(strlat);
                         myGeoPosition.setDegree(degree);
@@ -490,7 +489,6 @@ public class ViewSearch extends AppCompatActivity {
                             @Override
                             public void handleMessage(@NonNull Message msg) {
                                 super.handleMessage(msg);
-                               // mygeoposlist.setAdapter(myGeoPosAdapter);
                                 ((MyGeoPosAdapter.ViewHolder)mygeoposlist.getChildViewHolder(mygeoposlist.getChildAt(0))).Degree.setText(myGeoPosition.degree);
                                 ((MyGeoPosAdapter.ViewHolder)mygeoposlist.getChildViewHolder(mygeoposlist.getChildAt(0))).Longitude.setText(myGeoPosition.lon);
                                 ((MyGeoPosAdapter.ViewHolder)mygeoposlist.getChildViewHolder(mygeoposlist.getChildAt(0))).Latitude.setText(myGeoPosition.lat);
@@ -508,9 +506,6 @@ public class ViewSearch extends AppCompatActivity {
                                     handlernew.sendEmptyMessage(1);
                                 }else{
                                     myGeoPositionDao.update(myGeoPosition);
-
-
-                                    // myGeoPosAdapter =new MyGeoPosAdapter(ViewSearch.this,myGeoPositionDao.getmygeopos("mygeopos".hashCode()));
                                    handlerupdate.sendEmptyMessage(1);
                                 }
 
@@ -521,7 +516,7 @@ public class ViewSearch extends AppCompatActivity {
                         unregisterReceiver(receivercurrentSearch);
                     } catch (JSONException e) {
                         e.getStackTrace();
-                       // Toast.makeText(ViewSearch.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
+                       Toast.makeText(ViewSearch.this,"Проверьте связь с интернетом",Toast.LENGTH_LONG).show();
 
                     }
                 }else
@@ -550,8 +545,12 @@ public class ViewSearch extends AppCompatActivity {
                         addedCityDao.update(addedCity);
 
                         int temp=-1;
-                        for(int i=0;i<AddedAdapter.ids.size();i++) {
-                            if((strlon+strlat).compareTo(AddedAdapter.ids.get(i))==0){
+                        addedAdapter.notifyDataSetChanged();
+                        for(int i=0;i<addedAdapter.ids.size();i++) {
+                            if(addedAdapter.ids.get(i)==null){
+                                addedAdapter.ids.remove(i);
+                            }
+                            if((strlon+strlat).compareTo(addedAdapter.ids.get(i))==0){
                                 System.out.println("pppppppppppppppp"+i);
                                 temp=i;
                                 ((AddedAdapter.ViewHolder) searchcitylist.getChildViewHolder(searchcitylist.getChildAt(temp))).Degree.setText(degree);
@@ -570,11 +569,11 @@ public class ViewSearch extends AppCompatActivity {
             }
         }
     };
+    //получатель работает с получением позиции в первый раз и обновление ее в дальнейшем
     protected BroadcastReceiver receiverGeoPosition = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if(intent.getStringExtra(MyGeoPositisionService.PERMISSION).compareTo("mygeopos")==0 || intent.getStringExtra(MyGeoPositisionService.PERMISSION).compareTo("mygeoposNEW")==0) {
-                System.out.println("MYGEOPOSITIONSERVICE"+intent.getStringExtra(MyGeoPositisionService.INFOMYGEOPOSOTION));
                 try {
                     String intentstring = intent.getStringExtra(MyGeoPositisionService.INFOMYGEOPOSOTION);
                     JSONObject jsonpositioninfo = new JSONObject(intentstring);
@@ -585,7 +584,6 @@ public class ViewSearch extends AppCompatActivity {
                     String EnabledNet = jsonbase.getString("EnabledNet");
                     String strlon="";
                     String strlat="";
-                    System.out.println(LocationGPS);
                     if(LocationGPS.compareTo("")==0){
                         strlon=LocationNet.split("/")[1];
                         strlat=LocationNet.split("/")[0];
@@ -611,6 +609,7 @@ public class ViewSearch extends AppCompatActivity {
             }
         }
     };
+    //функция выбора города для показа на главный экран
     public  void ChooseCity(View view){
             kolchanges = 0;
             stopService(new Intent(ViewSearch.this, Search.class));
@@ -626,6 +625,7 @@ public class ViewSearch extends AppCompatActivity {
             ViewSearch.this.finish();
 
     }
+    //функция выбора города их добавленных для вывода на главный экран или при режиме удаления выделяет объект
     public  void ChooseCityfromAdded(View view){
         if(!AddedAdapter.getTimeforSelect()) {
             kolchanges = 0;
@@ -643,7 +643,7 @@ public class ViewSearch extends AppCompatActivity {
             ViewSearch.this.finish();
         }else {
             RecyclerView recyclerView = (RecyclerView) findViewById(R.id.citylist);
-
+            //обработка ячейки с местонахождением, чтобы не тригеррило соседнюю ячейку при нажатии
             if (!view.getTag().equals(-1)) {
                 if (!(addedAdapter.getCheckarraycheck().get(recyclerView.getChildLayoutPosition(view)))) {
                     System.out.println(recyclerView.getChildLayoutPosition(view));
@@ -656,25 +656,16 @@ public class ViewSearch extends AppCompatActivity {
         }
 
     }
+    //Добавление города из списка
     public void AddedCity(View view){
         TextView Addbut=(TextView) view;
         System.out.println("0000"+view.getTag());
-        //делай галочку
         Addbut.setBackground(ContextCompat.getDrawable(this,R.drawable.nullbackground));
         Addbut.setClickable(false);
         try{
-            System.out.println(Addbut.getTag());
         JSONObject jsoncity=(JSONObject) new JSONObject((String)Addbut.getTag()).get("coord");
-        int id=Integer.parseInt(jsoncity.getString("idtag"));
-            System.out.println("1");
-            int idcity = (jsoncity.getString("lon") + jsoncity.getString("lat")).hashCode();
+        int idcity = (jsoncity.getString("lon") + jsoncity.getString("lat")).hashCode();
         String degreecity=hashmapdegree.get(idcity);
-            System.out.println(degreecity);
-            System.out.println("2");
-            System.out.println(jsoncity.getString("lon") + jsoncity.getString("lat"));
-
-            System.out.println((jsoncity.getString("lon")+"/\\"+jsoncity.getString("lat")));
-            System.out.println("access"+idcity);
         citiesadded.add(new City(jsoncity.getString("name"),jsoncity.getString("country"),jsoncity.getString("lon"),jsoncity.getString("lat")));
         AddedCity addedCity=new AddedCity(jsoncity.getString("name"),jsoncity.getString("country"),jsoncity.getString("lon"),jsoncity.getString("lat"));
         addedCity.setDegree(degreecity);
@@ -682,7 +673,6 @@ public class ViewSearch extends AppCompatActivity {
             Executors.newSingleThreadExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
-                    System.out.println("ADD");
                     addedCityDao.insert(addedCity);
                 }
             });
@@ -691,6 +681,7 @@ public class ViewSearch extends AppCompatActivity {
             System.out.println("you are a bad programmer");
         }
     }
+    //обычная отмена действий и возвращения на глав экран
     public void Back(View view){
         EditText searchline=(EditText) findViewById(R.id.searchword);
         if(!AddedAdapter.getTimeforSelect()) {
@@ -716,6 +707,7 @@ public class ViewSearch extends AppCompatActivity {
 
         }
     }
+    //Удаление города из добавленных
     public void DeleteAdded(View view){
         ArrayList<Integer> icount=new ArrayList<Integer>();
         RecyclerView recyclerView=(RecyclerView) findViewById(R.id.citylist);
@@ -726,11 +718,10 @@ public class ViewSearch extends AppCompatActivity {
         }
         for(int i=0;i<icount.size();i++){
             final int tempi = icount.get(i);
-                System.out.println("GETCHILDAT"+recyclerView.getChildAt(tempi));
                 AddedAdapter.ViewHolder childholder =(AddedAdapter.ViewHolder) recyclerView.findViewHolderForLayoutPosition(tempi);
                 AddedCity addedCity=new AddedCity("","","","");
 
-                int idcity = AddedAdapter.ids.get(tempi).hashCode();
+                int idcity = addedAdapter.ids.get(tempi).hashCode();
                 addedCity.setId(idcity);
                 Handler handler=new Handler(){
                     @Override
@@ -756,11 +747,6 @@ public class ViewSearch extends AppCompatActivity {
         AddedAdapter.setTimeforselect(false);
         LinearLayout linearLayout=(LinearLayout) findViewById(R.id.celldeleteadded);
         linearLayout.setVisibility(View.GONE);
-        //for(int i=0;i<recyclerView.getAdapter().getItemCount();i++){
-            //addedAdapter.setCheckarrayvisByPos(i,false);
-            //addedAdapter.setCheckarraycheckByPos(i,false);
-        //
-       // }
         Button button=(Button) findViewById(R.id.exit);
         button.setBackground(ContextCompat.getDrawable(getApplicationContext(),R.drawable.baseline_keyboard_arrow_left_20));
 

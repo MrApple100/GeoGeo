@@ -28,7 +28,7 @@ public class AddedAdapter extends RecyclerView.Adapter<AddedAdapter.ViewHolder>{
     private  static boolean timeforselect=false;
     private ArrayList<Boolean> checkarrayvis=new ArrayList<Boolean>();
     private ArrayList<Boolean> checkarraycheck=new ArrayList<Boolean>();
-    static ArrayList<String> ids=new ArrayList<>();
+    public ArrayList<String> ids=new ArrayList<>();
 
 
     AddedAdapter(Context context, List<AddedCity> cities) {

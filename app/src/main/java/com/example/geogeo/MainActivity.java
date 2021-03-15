@@ -2,8 +2,6 @@ package com.example.geogeo;
 
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -11,30 +9,19 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.Manifest;
-import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
-import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 
 
 import android.os.Handler;
 import android.os.Message;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.View;
-import android.view.animation.Animation;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,18 +29,7 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.sql.Time;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.concurrent.Executors;
 
 
@@ -62,7 +38,6 @@ public class MainActivity extends AppCompatActivity {
     TextView textdegree;
     TextView textsky;
     TextView textsity;
-    TextView Maintext;
     RecyclerView dayslist;
     DayAdapter dayAdapter;
     String lonlat;
@@ -77,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //инициализация виджетов
         textdegree = (TextView) findViewById(R.id.currentdegree);
         fon =(RelativeLayout) findViewById(R.id.fon) ;
         textsky = (TextView) findViewById(R.id.sky);
@@ -84,18 +60,20 @@ public class MainActivity extends AppCompatActivity {
         Button search=(Button) findViewById(R.id.search_go_btn);
         Button gotomaps=(Button) findViewById(R.id.gotomaps);
         dayslist=(RecyclerView) findViewById(R.id.dayslist);
-
+        //добавление баз данных
         datamypos = (AppDataMyPos) AppDataMyPos.getInstance(this, "datamygeo").addMigrations(ViewSearch.MIGRATIONmygeopos1_2,ViewSearch.MIGRATIONmygeopos2_3).allowMainThreadQueries().build();
         myGeoPositionDao = datamypos.myGeoPositionDao();
         dataDay = (AppDataDay) AppDataDay.getInstance(this,"dataday").build();
         dayDao = dataDay.dayDao();
-
+        //проверка на доступ к метонахождению
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         && ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_COARSE_LOCATION)== PackageManager.PERMISSION_GRANTED){
             textsity.setText("Погода вокруг");
             if (myGeoPositionDao.getmygeopos(("mygeopos").hashCode()) != null) {
+                //обновление экрана
                 UpdateMain();
             }
+            //работа с сервисом местонахождения
             Executors.newSingleThreadExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
@@ -112,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
+            //если не дали разрешение
         }else{
             textsity.setText("Москва");
             registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
@@ -123,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
             startService(intent);
             ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},TAG_CODE_PERMISSION_LOCATION);
         }
+        //создает список погоды на пять дней
         Handler handler = new Handler() {
             @Override
             public void handleMessage(@NonNull Message msg) {
@@ -139,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
+        //переход на страницу управление городами
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -150,6 +130,7 @@ public class MainActivity extends AppCompatActivity {
                 overridePendingTransition(R.anim.newfromright,R.anim.oldtoright);
             }
         });
+        //отправляет запрос для показа города на карте
         gotomaps.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -164,10 +145,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        //на всякий случай
         Intent intentweather = new Intent(this, Geoservice.class);
         stopService(intentweather);
         Intent intentsearch = new Intent(this, Search.class);
         stopService(intentsearch);
+        //ну на крайняк
         if(receivercurrent.isOrderedBroadcast()){
             unregisterReceiver(receivercurrent);
         }
@@ -177,19 +160,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         //запрос отправляется раньше основного запроса, поэтому его не видно
-        if((textsity.getText().toString()).compareTo("")!=0){
+        /*if((textsity.getText().toString()).compareTo("")!=0){
             registerReceiver(receivercurrent, new IntentFilter(Geoservice.CHANNEL));
             String city =textsity.getText()+"";
             Intent intent = new Intent(getApplication(), Geoservice.class);
             intent.putExtra("city",city);
             intent.putExtra(Geoservice.PERMISSION,"city");
             startService(intent);
-        }
+        }*/
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        //если шо, перестраховка
         Intent intentweather = new Intent(this, Geoservice.class);
         stopService(intentweather);
         Intent intentsearch = new Intent(this, Search.class);
@@ -197,8 +181,14 @@ public class MainActivity extends AppCompatActivity {
         if(receivercurrent.isOrderedBroadcast()){
             unregisterReceiver(receivercurrent);
         }
+        //закрыть базы данных
+        System.out.println("DESTROYMAIN");
+        //dataDay.close();
+        //datamypos.close();
     }
-
+    //получатель, работает с Geoservice
+    //Geoservice в завсимости от параметра Permission выполняет дейтсвие и
+    //отправляет json сюда, в отдельно выделенное место для обработки
     protected BroadcastReceiver receivercurrent = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -212,18 +202,35 @@ public class MainActivity extends AppCompatActivity {
                     JSONArray jsondays=(JSONArray) jsonbase.get("daily");
                     int curdegK = ((JSONObject) jsonbase.get("current")).getInt("temp");
                     int curdeg = curdegK - 273;
+                    //меняю цвет в зависимости от температуры
+                    if(curdeg>4){
+                        if(curdeg>15){
+                            fon.setBackground(ContextCompat.getDrawable(MainActivity.this,R.drawable.sidewarm));
+                        }else{
+                            fon.setBackground(ContextCompat.getDrawable(MainActivity.this,R.drawable.sidehalfsun));
+                        }
+                    }else{
+                        if(curdeg<-15){
+                            fon.setBackground(ContextCompat.getDrawable(MainActivity.this,R.drawable.sidesnow));
+                        }else{
+                            if(curdeg<-4) {
+                                fon.setBackground(ContextCompat.getDrawable(MainActivity.this,R.drawable.sidesnow));
+                            }else{
+                                fon.setBackground(ContextCompat.getDrawable(MainActivity.this,R.drawable.sidehalfsun));
+                            }
+                        }
+                    }
                     lonlat=intent.getStringExtra(Geoservice.GOODCOORD).split("/")[1]+","+intent.getStringExtra(Geoservice.GOODCOORD).split("/")[0];
                     textdegree.setText(String.valueOf(curdeg));
-                    textsky.setText(wedescr); //выводим  JSON-массив в текстовое поле
-                    String currentdt= jsonbasecurrent.getString("dt");
+                    textsky.setText(wedescr);
+                    String currentdt= jsonbasecurrent.getString("dt"); //время отправки запроса. не пригодилось но пусть будет
+                    //заполняет ячейку дня информацией
                     for(int i=0;i<jsondays.length();i++){
-                        int tempi=i;
                         String date=((JSONObject)jsondays.get(i)).getString("dt");
                         int mindegree=((JSONObject)((JSONObject) jsondays.get(i)).get("temp")).getInt("min")-273;
                         int maxdegree=((JSONObject)((JSONObject) jsondays.get(i)).get("temp")).getInt("max")-273;
                         String weather=((JSONObject)((JSONArray)((JSONObject) jsondays.get(i)).get("weather")).get(0)).getString("description");
                         Day day=new Day(i,date,weather,mindegree+"",maxdegree+"");
-                        System.out.println(date);
                         Handler handler = new Handler() {
                             @Override
                             public void handleMessage(@NonNull Message msg) {
@@ -248,6 +255,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
                     }
+                    //разрегиваем получатель после выполненных действий, чтобы они не накапливались
                     unregisterReceiver(receivercurrent);
                 } else if (intent.getStringExtra(Geoservice.PERMISSION).compareTo("bymygeopos") == 0) {
                     String intentstring = intent.getStringExtra(Geoservice.INFOCurrent);
@@ -258,6 +266,7 @@ public class MainActivity extends AppCompatActivity {
                     String strlat = jsonbase.getString("lat");
                     int curdeg = curdegK - 273;
                     String degree = curdeg + "";
+                    //обновление данных о местонахождении в бд
                     myGeoPosition = new MyGeoPosition();
                     myGeoPosition.setMygeopos("mygeopos".hashCode());
                     myGeoPosition.setLon(strlon);
@@ -293,11 +302,11 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
+    //получатель работает с сервисом местонахождения
     protected BroadcastReceiver receiverGeoPosition = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if(intent.getStringExtra(MyGeoPositisionService.PERMISSION).compareTo("mygeopos")==0 || intent.getStringExtra(MyGeoPositisionService.PERMISSION).compareTo("mygeoposNEW")==0) {
-                System.out.println("MYGEOPOSITIONSERVICE"+intent.getStringExtra(MyGeoPositisionService.INFOMYGEOPOSOTION));
                 try {
                     String intentstring = intent.getStringExtra(MyGeoPositisionService.INFOMYGEOPOSOTION);
                     JSONObject jsonpositioninfo = new JSONObject(intentstring);
@@ -308,7 +317,6 @@ public class MainActivity extends AppCompatActivity {
                     String EnabledNet = jsonbase.getString("EnabledNet");
                     String strlon="";
                     String strlat="";
-                    System.out.println(LocationGPS);
                     if(LocationGPS.compareTo("")==0){
                         strlon=LocationNet.split("/")[1];
                         strlat=LocationNet.split("/")[0];
@@ -335,13 +343,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-
+    //получаем результат со страницы управления городами
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (resultCode) {
+            //если получили данные
                 case RESULT_OK:
-                    System.out.println("GETRESULT");
                     String strlon=data.getStringExtra(ViewSearch.LONGITUDE);
                     String strlat = data.getStringExtra(ViewSearch.LATITUDE);
                     textsity.setText(data.getStringExtra("NAMECITY"));
@@ -353,10 +361,12 @@ public class MainActivity extends AppCompatActivity {
                         stopService(intent);
                         startService(intent);
                     break;
+                    //просто вышли
             case RESULT_CANCELED:
                     break;
         }
     }
+    //получаем ответ на запрос разрешения для работы с местонахождением
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -386,17 +396,33 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+    //обновляем гланый экран
     public void UpdateMain(){
         try {
             JSONObject jsonObject = new JSONObject(myGeoPositionDao.getmygeopos("mygeopos".hashCode()).getLastjson());
             JSONObject jsonbase = (JSONObject) jsonObject.get("gis");
-            System.out.println("WE ARE HERE");
             JSONObject jsonbasecurrent = (JSONObject) jsonbase.get("current");
             String wedescr = ((JSONObject) ((JSONArray) jsonbasecurrent.get("weather")).get(0)).getString("description");
-            System.out.println(wedescr);
             int curdegK = ((JSONObject) jsonbase.get("current")).getInt("temp");
             int curdeg = curdegK - 273;
-            System.out.println(curdeg);
+            //меняю цвет в зависимости от температуры
+            if(curdeg>4){
+                if(curdeg>15){
+                    fon.setBackground(ContextCompat.getDrawable(MainActivity.this,R.drawable.sidewarm));
+                }else{
+                    fon.setBackground(ContextCompat.getDrawable(MainActivity.this,R.drawable.sidehalfsun));
+                }
+            }else{
+                if(curdeg<-15){
+                    fon.setBackground(ContextCompat.getDrawable(MainActivity.this,R.drawable.sidesnow));
+                }else{
+                    if(curdeg<-4) {
+                        fon.setBackground(ContextCompat.getDrawable(MainActivity.this,R.drawable.sidesnow));
+                    }else{
+                        fon.setBackground(ContextCompat.getDrawable(MainActivity.this,R.drawable.sidehalfsun));
+                    }
+                }
+            }
             textdegree.setText(String.valueOf(curdeg));
             textsky.setText(wedescr);
         }catch(JSONException e){

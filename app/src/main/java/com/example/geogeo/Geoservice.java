@@ -85,7 +85,6 @@ public class Geoservice extends Service{
                 try{
                     Scanner inputstream = new Scanner((InputStream) url.getContent());
                     result="{\"gis\":" +inputstream.nextLine()+"}";
-                    System.out.println(result);
                     inputstream.close();
                 }catch(IOException eio){
                     result= eio.toString();
@@ -115,14 +114,12 @@ public class Geoservice extends Service{
                     Scanner inputstream = new Scanner((InputStream) url.getContent());
                     System.out.println(url);
                     result="{\"gis\":" +inputstream.nextLine()+"}";
-                    System.out.println("2222"+result);
                     inputstream.close();
                 }catch(IOException eio){
                     result= eio.toString();
                 }
                 Intent intent=new Intent(CHANNEL);
                 intent.putExtra(INFOCurrent,result);
-                System.out.println(lon+" "+lat);
                 intent.putExtra(GOODCOORD,lon+"/"+lat);
                 intent.putExtra(PERMISSION,"lonlat");
                 sendBroadcast(intent);
@@ -142,7 +139,6 @@ public class Geoservice extends Service{
                 try{
                     Scanner inputstream = new Scanner((InputStream) url.getContent());
                     result="{\"gis\":" +inputstream.nextLine()+"}";
-                    System.out.println("3333"+result);
                     inputstream.close();
                 }catch(IOException eio){
                     result= eio.toString();
@@ -151,7 +147,6 @@ public class Geoservice extends Service{
                 intent.putExtra(INFOCurrent,result);
                 intent.putExtra(PERMISSION,"bymygeopos");
                 intent.putExtra("ACTION",Action);
-                System.out.println("SEND");
                 sendBroadcast(intent);
             }
 
@@ -174,14 +169,12 @@ public class Geoservice extends Service{
                     Scanner inputstream = new Scanner((InputStream) url.getContent());
                     System.out.println(url);
                     result="{\"gis\":" +inputstream.nextLine()+"}";
-                    System.out.println("4444"+result);
                     inputstream.close();
                 }catch(IOException eio){
                     result= eio.toString();
                 }
                 Intent intent=new Intent(CHANNEL);
                 intent.putExtra(INFOCurrent,result);
-                System.out.println(lon+" "+lat);
                 intent.putExtra(GOODCOORD,lon+"/"+lat);
                 intent.putExtra(PERMISSION,"updateadded");
                 sendBroadcast(intent);

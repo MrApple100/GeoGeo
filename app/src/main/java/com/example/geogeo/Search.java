@@ -67,7 +67,6 @@ public class Search extends Service{
         String wordofcity=intent.getStringExtra("city").trim();
         int numchange=intent.getIntExtra("numchange",-1);
         anotherThread = new AnotherThread(wordofcity,numchange);
-        System.out.println("++++"+wordofcity);
         if(ViewSearch.kolchanges==numchange){
             anotherThread.start();
         }
@@ -120,7 +119,6 @@ public class Search extends Service{
                             URL url = new URL("https://api.openweathermap.org/geo/1.0/direct?q=" + wordofcity + "&limit=16&appid=11380ed4b5872057ec582d1289415365");
                             Scanner inputstream = new Scanner((InputStream) url.getContent());
                             result = "{\"list\":" + inputstream.nextLine() + "}";
-                            System.out.println("-------" + result);
                         } catch (IOException eio) {
                             System.out.println("eeerrrreee");
                             eio.getStackTrace();
@@ -131,30 +129,4 @@ public class Search extends Service{
 
         }
     }
-
-
-
-
-    public class AnotherThread2 extends Thread{
-        URL url;
-        AnotherThread2(URL url){
-            this.url=url;
-        }
-        @Override
-        public void run() {
-            synchronized (url) {
-                String result;
-                try{
-                    Scanner inputstream = new Scanner((InputStream) url.getContent());
-                    result = "{\"gis\":" + inputstream.nextLine() + "}";
-                    System.out.println(result);
-                    inputstream.close();
-                }catch(IOException eio){
-                    result= eio.toString();
-                }
-            }
-
-        }
-    }
-
 }

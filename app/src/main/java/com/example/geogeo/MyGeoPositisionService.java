@@ -74,13 +74,11 @@ public class MyGeoPositisionService extends Service {
 
         @Override
         public void onLocationChanged(Location location) {
-            System.out.println("LOCATION"+location);
             showLocation(location);
         }
 
         @Override
         public void onProviderDisabled(String provider) {
-            System.out.println(provider);
             checkEnabled();
         }
 
@@ -97,7 +95,6 @@ public class MyGeoPositisionService extends Service {
     };
     private void showLocation(Location location) {
         if (location == null) {
-            System.out.println("LOCATION");
             return;
         }
         if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
@@ -126,7 +123,6 @@ public class MyGeoPositisionService extends Service {
         }
         @Override
         public void run() {
-            System.out.println("STARTTREAD");
                 try {
                     while (kol < 3 && sec != 1) {
                         sleep(1000);
